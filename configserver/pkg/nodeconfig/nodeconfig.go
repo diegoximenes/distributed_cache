@@ -47,6 +47,18 @@ func Get() (map[string]NodeConfig, error) {
 	return get()
 }
 
+func writeToFile(obj any, path string) error {
+	objJson, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(path, objJson, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func Add(nodeConfigToAdd *NodeConfig) error {
 	rwMutex.Lock()
 	defer rwMutex.Unlock()
@@ -58,11 +70,26 @@ func Add(nodeConfigToAdd *NodeConfig) error {
 
 	nodesConfig[nodeConfigToAdd.ID] = *nodeConfigToAdd
 
-	nodesConfigJson, err := json.Marshal(nodesConfig)
+	err = writeToFile(nodesConfig, nodesConfigPath)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(nodesConfigPath, nodesConfigJson, 0644)
+
+	return nil
+}
+
+func Delete(id string) error {
+	rwMutex.Lock()
+	defer rwMutex.Unlock()
+
+	nodesConfig, err := get()
+	if err != nil {
+		return err
+	}
+
+	delete(nodesConfig, id)
+
+	err = writeToFile(nodesConfig, nodesConfigPath)
 	if err != nil {
 		return err
 	}

@@ -9,5 +9,6 @@ func main() {
 	router := gin.Default()
 	router.GET("/node", node.Get)
 	router.PUT("/node", node.Put)
+	router.DELETE("/node/:id", node.Delete)
 	router.Run()
 }

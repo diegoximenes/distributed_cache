@@ -27,3 +27,13 @@ func Put(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
 	}
 }
+
+func Delete(c *gin.Context) {
+	id := c.Param("id")
+	err := nodeconfig.Delete(id)
+	if err != nil {
+		c.Error(err)
+	} else {
+		c.AbortWithStatus(http.StatusOK)
+	}
+}
