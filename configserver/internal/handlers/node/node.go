@@ -11,7 +11,7 @@ import (
 func Get(c *gin.Context) {
 	nodesConfig, err := nodeconfig.Get()
 	if err != nil {
-		c.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, nodesConfig)
 	}
@@ -22,7 +22,7 @@ func Put(c *gin.Context) {
 	c.BindJSON(&input)
 	err := nodeconfig.Add(&input)
 	if err != nil {
-		c.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 	} else {
 		c.AbortWithStatus(http.StatusOK)
 	}
@@ -32,7 +32,7 @@ func Delete(c *gin.Context) {
 	id := c.Param("id")
 	err := nodeconfig.Delete(id)
 	if err != nil {
-		c.Error(err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 	} else {
 		c.AbortWithStatus(http.StatusOK)
 	}

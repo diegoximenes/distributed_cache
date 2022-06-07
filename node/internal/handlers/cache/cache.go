@@ -28,8 +28,8 @@ func Get(cache *cacheObj.Cache) func(c *gin.Context) {
 }
 
 type PutInput struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key   string `json:"key" binding:"required"`
+	Value string `json:"value" binding:"required"`
 }
 
 func Put(cache *cacheObj.Cache) func(c *gin.Context) {

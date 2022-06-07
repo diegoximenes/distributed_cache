@@ -12,9 +12,9 @@ const nodesConfigPath = "/tmp/configserver.json"
 var rwMutex sync.RWMutex
 
 type NodeConfig struct {
-	ID     string `json:"id" binding:"required"`
-	IP     string `json:"ip" binding:"required"`
-	Status string `json:"status" binding:"required"`
+	ID      string `json:"id" binding:"required"`
+	Address string `json:"address" binding:"required"`
+	Status  string `json:"status" binding:"required"`
 }
 
 func get() (map[string]NodeConfig, error) {
