@@ -39,13 +39,13 @@ func Get(address string, key string) (*GetResponse, error) {
 }
 
 func Put(address string, input *PutInput) error {
-	body, err := json.Marshal(input)
+	inputJson, err := json.Marshal(input)
 	if err != nil {
 		return err
 	}
 
 	url := fmt.Sprintf("%v/cache", address)
-	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(inputJson))
 	if err != nil {
 		return err
 	}

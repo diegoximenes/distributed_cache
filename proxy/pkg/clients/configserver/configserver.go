@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/config"
+	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/util/logger"
 	httpUtil "github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/util/http"
+	"go.uber.org/zap"
 )
-
-const configServerURL = "http://localhost:28000/node"
 
 type NodeConfig struct {
 	ID      string `json:"id" binding:"required"`
@@ -20,27 +21,28 @@ type NodeConfig struct {
 type NodesConfig map[string]NodeConfig
 
 type ConfigServerClient struct {
-	NodesConfig *NodesConfig
+	NodesConfig NodesConfig
 }
 
 func New() (*ConfigServerClient, error) {
 	nodesConfig := make(NodesConfig)
-	configserverClient := &ConfigServerClient{
-		NodesConfig: &nodesConfig,
+	configserverClient := ConfigServerClient{
+		NodesConfig: nodesConfig,
 	}
 
-	err := configserverClient.get()
+	err := configserverClient.sync()
 	if err != nil {
 		return nil, err
 	}
 
 	go configserverClient.periodicallySync()
 
-	return configserverClient, nil
+	return &configserverClient, nil
 }
 
-func (configserverClient *ConfigServerClient) get() error {
-	request, err := http.NewRequest("GET", configServerURL, nil)
+func (configServerClient *ConfigServerClient) sync() error {
+	url := fmt.Sprintf("%s/node", config.Config.ConfigServerAddress)
+	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
 	}
@@ -54,15 +56,18 @@ func (configserverClient *ConfigServerClient) get() error {
 	if err != nil {
 		return err
 	}
-	configserverClient.NodesConfig = &response
+	configServerClient.NodesConfig = response
 
-	fmt.Println(response)
+	logger.Logger.Info(
+		"ConfigServerClient.sync",
+		zap.String("NodesConfig", fmt.Sprintf("%v", configServerClient.NodesConfig)),
+	)
 
 	return nil
 }
 
-func (configserverClient *ConfigServerClient) periodicallySync() {
+func (configServerClient *ConfigServerClient) periodicallySync() {
 	for range time.Tick(time.Second * 15) {
-		configserverClient.get()
+		configServerClient.sync()
 	}
 }
