@@ -18,3 +18,7 @@ func (c *Cache) Get(key string) (string, bool) {
 func (c *Cache) Put(key string, value string) {
 	c.hashTable[key] = value
 }
+
+func (c *Cache) Delete(key string) {
+	delete(c.hashTable, key)
+}

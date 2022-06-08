@@ -27,6 +27,14 @@ func Get(cache *cacheObj.Cache) func(c *gin.Context) {
 	}
 }
 
+func Delete(cache *cacheObj.Cache) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		key := c.Param("key")
+		cache.Delete(key)
+		c.AbortWithStatus(http.StatusOK)
+	}
+}
+
 type PutInput struct {
 	Key   string `json:"key" binding:"required"`
 	Value string `json:"value" binding:"required"`
