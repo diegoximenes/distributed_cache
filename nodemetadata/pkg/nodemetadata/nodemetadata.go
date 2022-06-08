@@ -1,4 +1,4 @@
-package nodeconfig
+package nodemetadata
 
 import (
 	"encoding/json"
@@ -7,40 +7,40 @@ import (
 	"sync"
 )
 
-const nodesConfigPath = "/tmp/configserver.json"
+const nodesMetadataPath = "/tmp/nodemetadata.json"
 
 var rwMutex sync.RWMutex
 
-type NodeConfig struct {
+type NodeMetadata struct {
 	ID      string `json:"id" binding:"required"`
 	Address string `json:"address" binding:"required"`
 	Status  string `json:"status" binding:"required"`
 }
 
-func get() (map[string]NodeConfig, error) {
-	jsonFile, err := os.Open(nodesConfigPath)
+func get() (map[string]NodeMetadata, error) {
+	jsonFile, err := os.Open(nodesMetadataPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return map[string]NodeConfig{}, nil
+			return map[string]NodeMetadata{}, nil
 		}
-		return map[string]NodeConfig{}, err
+		return map[string]NodeMetadata{}, err
 	}
 
 	bytesFile, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
-		return map[string]NodeConfig{}, err
+		return map[string]NodeMetadata{}, err
 	}
 
-	var nodesConfig map[string]NodeConfig
-	err = json.Unmarshal(bytesFile, &nodesConfig)
+	var nodesMetadata map[string]NodeMetadata
+	err = json.Unmarshal(bytesFile, &nodesMetadata)
 	if err != nil {
-		return map[string]NodeConfig{}, err
+		return map[string]NodeMetadata{}, err
 	}
 
-	return nodesConfig, nil
+	return nodesMetadata, nil
 }
 
-func Get() (map[string]NodeConfig, error) {
+func Get() (map[string]NodeMetadata, error) {
 	rwMutex.RLock()
 	defer rwMutex.RUnlock()
 
@@ -59,18 +59,18 @@ func writeToFile(obj any, path string) error {
 	return nil
 }
 
-func Add(nodeConfigToAdd *NodeConfig) error {
+func Add(nodeMetadataToAdd *NodeMetadata) error {
 	rwMutex.Lock()
 	defer rwMutex.Unlock()
 
-	nodesConfig, err := get()
+	nodesMetadata, err := get()
 	if err != nil {
 		return err
 	}
 
-	nodesConfig[nodeConfigToAdd.ID] = *nodeConfigToAdd
+	nodesMetadata[nodeMetadataToAdd.ID] = *nodeMetadataToAdd
 
-	err = writeToFile(nodesConfig, nodesConfigPath)
+	err = writeToFile(nodesMetadata, nodesMetadataPath)
 	if err != nil {
 		return err
 	}
@@ -82,14 +82,14 @@ func Delete(id string) error {
 	rwMutex.Lock()
 	defer rwMutex.Unlock()
 
-	nodesConfig, err := get()
+	nodesMetadata, err := get()
 	if err != nil {
 		return err
 	}
 
-	delete(nodesConfig, id)
+	delete(nodesMetadata, id)
 
-	err = writeToFile(nodesConfig, nodesConfigPath)
+	err = writeToFile(nodesMetadata, nodesMetadataPath)
 	if err != nil {
 		return err
 	}

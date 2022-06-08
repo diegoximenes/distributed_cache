@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/diegoximenes/distributed_key_value_cache/configserver/internal/handlers/node"
+	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/handlers/node"
 	"github.com/gin-gonic/gin"
 )
 

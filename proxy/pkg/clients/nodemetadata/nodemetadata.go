@@ -1,4 +1,4 @@
-package configserver
+package nodemetadata
 
 import (
 	"encoding/json"
@@ -12,36 +12,36 @@ import (
 	"go.uber.org/zap"
 )
 
-type NodeConfig struct {
+type NodeMetadata struct {
 	ID      string `json:"id" binding:"required"`
 	Address string `json:"address" binding:"required"`
 	Status  string `json:"status" binding:"required"`
 }
 
-type NodesConfig map[string]NodeConfig
+type NodesMetadata map[string]NodeMetadata
 
-type ConfigServerClient struct {
-	NodesConfig NodesConfig
+type NodeMetadataClient struct {
+	NodesMetadata NodesMetadata
 }
 
-func New() (*ConfigServerClient, error) {
-	nodesConfig := make(NodesConfig)
-	configserverClient := ConfigServerClient{
-		NodesConfig: nodesConfig,
+func New() (*NodeMetadataClient, error) {
+	nodesMetadata := make(NodesMetadata)
+	nodeMetadataClient := NodeMetadataClient{
+		NodesMetadata: nodesMetadata,
 	}
 
-	err := configserverClient.sync()
+	err := nodeMetadataClient.sync()
 	if err != nil {
 		return nil, err
 	}
 
-	go configserverClient.periodicallySync()
+	go nodeMetadataClient.periodicallySync()
 
-	return &configserverClient, nil
+	return &nodeMetadataClient, nil
 }
 
-func (configServerClient *ConfigServerClient) sync() error {
-	url := fmt.Sprintf("%s/node", config.Config.ConfigServerAddress)
+func (nodeMetadataClient *NodeMetadataClient) sync() error {
+	url := fmt.Sprintf("%s/node", config.Config.NodeMetadataAddress)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -51,23 +51,23 @@ func (configServerClient *ConfigServerClient) sync() error {
 	if err != nil {
 		return err
 	}
-	var response NodesConfig
+	var response NodesMetadata
 	err = json.Unmarshal(responseBytes, &response)
 	if err != nil {
 		return err
 	}
-	configServerClient.NodesConfig = response
+	nodeMetadataClient.NodesMetadata = response
 
 	logger.Logger.Info(
-		"ConfigServerClient.sync",
-		zap.String("NodesConfig", fmt.Sprintf("%v", configServerClient.NodesConfig)),
+		"NodeMetadataClient.sync",
+		zap.String("NodesMetadata", fmt.Sprintf("%v", nodeMetadataClient.NodesMetadata)),
 	)
 
 	return nil
 }
 
-func (configServerClient *ConfigServerClient) periodicallySync() {
+func (nodeMetadataClient *NodeMetadataClient) periodicallySync() {
 	for range time.Tick(time.Second * 15) {
-		configServerClient.sync()
+		nodeMetadataClient.sync()
 	}
 }

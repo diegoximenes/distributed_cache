@@ -8,18 +8,18 @@ import (
 
 	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/keypartition/rendezvoushashing"
 	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/util/logger"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/configserver"
 	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/node"
+	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/nodemetadata"
 	httpUtil "github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/util/http"
 )
 
-func Get(configServerClient *configserver.ConfigServerClient) func(c *gin.Context) {
+func Get(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 
-		nodeConfig := rendezvoushashing.GetNodeConfig(&configServerClient.NodesConfig, key)
+		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodeMetadataClient.NodesMetadata, key)
 
-		response, err := node.Get(nodeConfig.Address, key)
+		response, err := node.Get(nodeMetadata.Address, key)
 		if err != nil {
 			httpError, isHTTPError := err.(*httpUtil.HTTPError)
 			if isHTTPError && (httpError.StatusCode == http.StatusNotFound) {
@@ -29,7 +29,7 @@ func Get(configServerClient *configserver.ConfigServerClient) func(c *gin.Contex
 					err.Error(),
 					zap.String("method", "get"),
 					zap.String("key", key),
-					zap.String("nodeConfig.ID", nodeConfig.ID),
+					zap.String("nodeMetadata.ID", nodeMetadata.ID),
 				)
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}
@@ -39,21 +39,21 @@ func Get(configServerClient *configserver.ConfigServerClient) func(c *gin.Contex
 	}
 }
 
-func Put(configServerClient *configserver.ConfigServerClient) func(c *gin.Context) {
+func Put(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input node.PutInput
 		c.BindJSON(&input)
 
-		nodeConfig := rendezvoushashing.GetNodeConfig(&configServerClient.NodesConfig, input.Key)
+		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodeMetadataClient.NodesMetadata, input.Key)
 
-		err := node.Put(nodeConfig.Address, &input)
+		err := node.Put(nodeMetadata.Address, &input)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			logger.Logger.Error(
 				err.Error(),
 				zap.String("method", "put"),
 				zap.String("key", input.Key),
-				zap.String("nodeConfig.ID", nodeConfig.ID),
+				zap.String("nodeMetadata.ID", nodeMetadata.ID),
 			)
 		} else {
 			c.AbortWithStatus(http.StatusOK)

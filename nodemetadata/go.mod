@@ -1,4 +1,4 @@
-module github.com/diegoximenes/distributed_key_value_cache/configserver
+module github.com/diegoximenes/distributed_key_value_cache/nodemetadata
 
 go 1.18
 

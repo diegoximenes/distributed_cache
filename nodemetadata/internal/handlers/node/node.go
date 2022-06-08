@@ -5,22 +5,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/diegoximenes/distributed_key_value_cache/configserver/pkg/nodeconfig"
+	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/pkg/nodemetadata"
 )
 
 func Get(c *gin.Context) {
-	nodesConfig, err := nodeconfig.Get()
+	nodesMetadata, err := nodemetadata.Get()
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	} else {
-		c.JSON(http.StatusOK, nodesConfig)
+		c.JSON(http.StatusOK, nodesMetadata)
 	}
 }
 
 func Put(c *gin.Context) {
-	var input nodeconfig.NodeConfig
+	var input nodemetadata.NodeMetadata
 	c.BindJSON(&input)
-	err := nodeconfig.Add(&input)
+	err := nodemetadata.Add(&input)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	} else {
@@ -30,7 +30,7 @@ func Put(c *gin.Context) {
 
 func Delete(c *gin.Context) {
 	id := c.Param("id")
-	err := nodeconfig.Delete(id)
+	err := nodemetadata.Delete(id)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	} else {

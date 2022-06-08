@@ -9,7 +9,7 @@ import (
 	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/handlers/cache"
 	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/handlers/heartbeat"
 	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/util/logger"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/configserver"
+	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/nodemetadata"
 )
 
 func main() {
@@ -20,14 +20,14 @@ func main() {
 		panic(fmt.Sprintf("Error when setting logger: %v", err))
 	}
 
-	configServerClient, err := configserver.New()
+	nodeMetadataClient, err := nodemetadata.New()
 	if err != nil {
 		panic(fmt.Sprintf("Error when setting configServerClient: %v", err))
 	}
 
 	router := gin.Default()
 	router.GET("/heartbeat", heartbeat.Heartbeat)
-	router.GET("/cache/:key", cache.Get(configServerClient))
-	router.PUT("/cache", cache.Put(configServerClient))
+	router.GET("/cache/:key", cache.Get(nodeMetadataClient))
+	router.PUT("/cache", cache.Put(nodeMetadataClient))
 	router.Run()
 }
