@@ -18,6 +18,10 @@ func Get(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Contex
 		key := c.Param("key")
 
 		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodeMetadataClient.NodesMetadata, key)
+		if nodeMetadata == nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
 
 		response, err := node.Get(nodeMetadata.Address, key)
 		if err != nil {
@@ -45,6 +49,14 @@ func Put(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Contex
 		c.BindJSON(&input)
 
 		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodeMetadataClient.NodesMetadata, input.Key)
+		if nodeMetadata == nil {
+			logger.Logger.Error(
+				"Zero nodes available",
+				zap.String("method", "put"),
+			)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 
 		err := node.Put(nodeMetadata.Address, &input)
 		if err != nil {
