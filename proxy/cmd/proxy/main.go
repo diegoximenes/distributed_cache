@@ -22,7 +22,7 @@ func main() {
 
 	nodeMetadataClient, err := nodemetadata.New()
 	if err != nil {
-		panic(fmt.Sprintf("Error when setting configServerClient: %v", err))
+		panic(fmt.Sprintf("Error when setting nodeMetadataClient: %v", err))
 	}
 
 	router := gin.Default()

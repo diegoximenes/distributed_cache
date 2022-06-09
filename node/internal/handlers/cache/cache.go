@@ -35,16 +35,11 @@ func Delete(cache *cacheObj.Cache) func(c *gin.Context) {
 	}
 }
 
-type PutInput struct {
-	Key   string `json:"key" binding:"required"`
-	Value string `json:"value" binding:"required"`
-}
-
 func Put(cache *cacheObj.Cache) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var input PutInput
+		var input cacheObj.PutInput
 		c.BindJSON(&input)
-		cache.Put(input.Key, input.Value)
+		cache.Put(&input)
 		c.AbortWithStatus(http.StatusOK)
 	}
 }

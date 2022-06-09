@@ -16,6 +16,7 @@ type GetResponse struct {
 type PutInput struct {
 	Key   string `json:"key" binding:"required"`
 	Value string `json:"value" binding:"required"`
+	TTL   *int64 `json:"ttl"`
 }
 
 func Get(address string, key string) (*GetResponse, error) {
