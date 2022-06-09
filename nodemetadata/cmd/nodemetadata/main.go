@@ -1,14 +1,11 @@
 package main
 
 import (
-	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/handlers/node"
-	"github.com/gin-gonic/gin"
+	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/config"
+	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/httprouter"
 )
 
 func main() {
-	router := gin.Default()
-	router.GET("/node", node.Get)
-	router.PUT("/node", node.Put)
-	router.DELETE("/node/:id", node.Delete)
-	router.Run()
+	config.Read()
+	httprouter.Set()
 }
