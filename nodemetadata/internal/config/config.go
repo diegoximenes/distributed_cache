@@ -10,12 +10,20 @@ import (
 )
 
 type Spec struct {
-	HTTPAddress string `mapstructure:"http_address" validate:"required"`
+	RaftId               string `mapstructure:"raft_id" validate:"required"`
+	RaftAddress          string `mapstructure:"raft_address" validate:"required"`
+	RaftDir              string `mapstructure:"raft_dir" validate:"required"`
+	BootstrapRaftCluster *bool  `mapstructure:"bootstrap_raft_cluster" validate:"required"`
+	HTTPAddress          string `mapstructure:"http_address" validate:"required"`
 }
 
 var Config Spec
 
 func Read() {
+	pflag.String("raft_id", "", "raft node id")
+	pflag.String("raft_address", "", "raft bind address")
+	pflag.String("raft_dir", "", "raft dir path")
+	pflag.Bool("bootstrap_raft_cluster", false, "boolean indicating if should boostrap raft cluster")
 	pflag.String("http_address", "", "http bind address")
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stdout, "Usage: %s [options]\n", os.Args[0])
