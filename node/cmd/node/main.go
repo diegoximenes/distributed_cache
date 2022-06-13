@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 
-	cacheHandler "github.com/diegoximenes/distributed_key_value_cache/node/internal/handlers/cache"
-	"github.com/diegoximenes/distributed_key_value_cache/node/internal/handlers/heartbeat"
-	cache "github.com/diegoximenes/distributed_key_value_cache/node/pkg/cache"
+	cacheHandler "github.com/diegoximenes/distributed_cache/node/internal/handlers/cache"
+	"github.com/diegoximenes/distributed_cache/node/internal/handlers/heartbeat"
+	cache "github.com/diegoximenes/distributed_cache/node/pkg/cache"
 )
 
 func main() {

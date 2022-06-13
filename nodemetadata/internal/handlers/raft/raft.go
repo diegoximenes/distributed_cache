@@ -3,7 +3,7 @@ package raft
 import (
 	"net/http"
 
-	raftJoin "github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/raft/join"
+	raftJoin "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/join"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 )

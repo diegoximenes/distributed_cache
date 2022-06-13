@@ -1,4 +1,4 @@
-module github.com/diegoximenes/distributed_key_value_cache/node
+module github.com/diegoximenes/distributed_cache/node
 
 go 1.18
 

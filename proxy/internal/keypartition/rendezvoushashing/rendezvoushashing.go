@@ -5,7 +5,7 @@ import (
 
 	"github.com/spaolacci/murmur3"
 
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/nodemetadata"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodemetadata"
 )
 
 func GetNodeMetadata(nodesMetadata *nodemetadata.NodesMetadata, key string) *nodemetadata.NodeMetadata {

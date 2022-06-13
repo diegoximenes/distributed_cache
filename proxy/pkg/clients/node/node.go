@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	httpUtil "github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/util/http"
+	httpUtil "github.com/diegoximenes/distributed_cache/proxy/pkg/util/http"
 )
 
 type GetResponse struct {

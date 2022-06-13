@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cacheObj "github.com/diegoximenes/distributed_key_value_cache/node/pkg/cache"
+	cacheObj "github.com/diegoximenes/distributed_cache/node/pkg/cache"
 )
 
 type GetResponse struct {

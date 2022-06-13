@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/config"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/util/logger"
-	httpUtil "github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/util/http"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
+	httpUtil "github.com/diegoximenes/distributed_cache/proxy/pkg/util/http"
 	"go.uber.org/zap"
 )
 

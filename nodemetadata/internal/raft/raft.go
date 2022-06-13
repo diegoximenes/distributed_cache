@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb"
 
-	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/config"
-	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/raft/fsm"
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/config"
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
 )
 
 func Set() (*raft.Raft, *fsm.FSM, error) {

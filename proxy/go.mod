@@ -1,4 +1,4 @@
-module github.com/diegoximenes/distributed_key_value_cache/proxy
+module github.com/diegoximenes/distributed_cache/proxy
 
 go 1.18
 

@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/config"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/handlers/cache"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/handlers/heartbeat"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/util/logger"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/nodemetadata"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/cache"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/heartbeat"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodemetadata"
 )
 
 func main() {

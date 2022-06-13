@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/keypartition/rendezvoushashing"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/internal/util/logger"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/node"
-	"github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/clients/nodemetadata"
-	httpUtil "github.com/diegoximenes/distributed_key_value_cache/proxy/pkg/util/http"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition/rendezvoushashing"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodemetadata"
+	httpUtil "github.com/diegoximenes/distributed_cache/proxy/pkg/util/http"
 )
 
 func Get(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Context) {

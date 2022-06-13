@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 
-	raftFSM "github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/raft/fsm"
+	raftFSM "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
 )
 
 const (

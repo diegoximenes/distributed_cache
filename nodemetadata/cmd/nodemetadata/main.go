@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/config"
-	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/httprouter"
-	"github.com/diegoximenes/distributed_key_value_cache/nodemetadata/internal/raft"
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/config"
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter"
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft"
 )
 
 func main() {

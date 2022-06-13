@@ -1,1 +1,1 @@
-# distributed_key_value_cache
+# distributed_cache
