@@ -9,10 +9,10 @@ import (
 func main() {
 	config.Read()
 
-	raftNode, fsm, err := raft.Set()
+	raftNode, fsm, raftNodeMetadataClient, err := raft.Set()
 	if err != nil {
 		panic(err)
 	}
 
-	httprouter.Set(raftNode, fsm)
+	httprouter.Set(raftNode, fsm, raftNodeMetadataClient)
 }

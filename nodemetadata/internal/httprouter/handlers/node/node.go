@@ -2,6 +2,7 @@ package node
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,17 +10,24 @@ import (
 	"github.com/hashicorp/raft"
 
 	raftFSM "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
 )
 
 const (
 	raftTimeout = 10 * time.Second
 )
 
-func Get(raftNode *raft.Raft, fsm *raftFSM.FSM) func(c *gin.Context) {
+func Get(raftNode *raft.Raft, fsm *raftFSM.FSM, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		err := raftNode.VerifyLeader().Error()
 		if err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
+			leaderApplicationAddress, err := raftNodeMetadataClient.GetLeaderApplicationAddress()
+			if err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+			} else {
+				url := fmt.Sprintf("%v%v", leaderApplicationAddress, c.Request.URL.Path)
+				c.Redirect(http.StatusMovedPermanently, url)
+			}
 		} else {
 			nodesMetadata := fsm.Get()
 			c.JSON(http.StatusOK, nodesMetadata)
@@ -35,7 +43,7 @@ func applyCommand(raftNode *raft.Raft, command *raftFSM.Command) error {
 	return raftNode.Apply(commandBytes, raftTimeout).Error()
 }
 
-func Put(raftNode *raft.Raft) func(c *gin.Context) {
+func Put(raftNode *raft.Raft, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input raftFSM.NodeMetadata
 		c.BindJSON(&input)
@@ -53,7 +61,7 @@ func Put(raftNode *raft.Raft) func(c *gin.Context) {
 	}
 }
 
-func Delete(raftNode *raft.Raft) func(c *gin.Context) {
+func Delete(raftNode *raft.Raft, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
