@@ -2,7 +2,6 @@ package node
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -19,19 +18,8 @@ const (
 
 func Get(raftNode *raft.Raft, fsm *raftFSM.FSM, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		err := raftNode.VerifyLeader().Error()
-		if err != nil {
-			leaderApplicationAddress, err := raftNodeMetadataClient.GetLeaderApplicationAddress()
-			if err != nil {
-				c.AbortWithStatus(http.StatusInternalServerError)
-			} else {
-				url := fmt.Sprintf("%v%v", leaderApplicationAddress, c.Request.URL.Path)
-				c.Redirect(http.StatusMovedPermanently, url)
-			}
-		} else {
-			nodesMetadata := fsm.Get()
-			c.JSON(http.StatusOK, nodesMetadata)
-		}
+		nodesMetadata := fsm.Get()
+		c.JSON(http.StatusOK, nodesMetadata)
 	}
 }
 
