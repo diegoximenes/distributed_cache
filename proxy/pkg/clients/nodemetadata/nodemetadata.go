@@ -8,7 +8,7 @@ import (
 
 	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
-	httpUtil "github.com/diegoximenes/distributed_cache/proxy/pkg/util/http"
+	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 	"go.uber.org/zap"
 )
 
@@ -47,7 +47,8 @@ func (nodeMetadataClient *NodeMetadataClient) sync() error {
 		return err
 	}
 
-	responseBytes, err := httpUtil.DoRequest(request)
+	httpClient := httpUtil.NewClient(&http.Client{})
+	responseBytes, err := httpClient.DoRequest(request)
 	if err != nil {
 		return err
 	}

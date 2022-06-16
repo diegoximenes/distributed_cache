@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	httpUtil "github.com/diegoximenes/distributed_cache/proxy/pkg/util/http"
+	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 )
 
 type GetResponse struct {
@@ -26,7 +26,8 @@ func Get(address string, key string) (*GetResponse, error) {
 		return nil, err
 	}
 
-	responseBytes, err := httpUtil.DoRequest(request)
+	httpClient := httpUtil.NewClient(&http.Client{})
+	responseBytes, err := httpClient.DoRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,8 @@ func Put(address string, input *PutInput) error {
 		return err
 	}
 
-	_, err = httpUtil.DoRequest(request)
+	httpClient := httpUtil.NewClient(&http.Client{})
+	_, err = httpClient.DoRequest(request)
 	if err != nil {
 		return err
 	}

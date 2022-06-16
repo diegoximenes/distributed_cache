@@ -10,7 +10,7 @@ import (
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodemetadata"
-	httpUtil "github.com/diegoximenes/distributed_cache/proxy/pkg/util/http"
+	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 )
 
 func Get(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Context) {
