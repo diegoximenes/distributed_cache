@@ -10,7 +10,7 @@ import (
 )
 
 type Spec struct {
-	CacheSize int `mapstructure:"cache_size" validate:"required"`
+	CacheSize int `mapstructure:"cache_size" validate:"gt=0"`
 }
 
 var Config Spec

@@ -10,13 +10,13 @@ import (
 const maxTTL int64 = 600
 
 type PutInput struct {
-	Key   string      `json:"key" binding:"required"`
-	Value interface{} `json:"value" binding:"required"`
-	TTL   *int64      `json:"ttl"`
+	Key   string `json:"key" binding:"required"`
+	Value string `json:"value" binding:"required"`
+	TTL   *int64 `json:"ttl"`
 }
 
 type obj struct {
-	value   interface{}
+	value   string
 	putTime int64
 	ttl     *int64
 }
@@ -32,14 +32,14 @@ func New(size int) (*Cache, error) {
 		return nil, err
 	}
 
-	cache := &Cache{
+	cache := Cache{
 		lru:   lruCache,
 		mutex: sync.Mutex{},
 	}
-	return cache, nil
+	return &cache, nil
 }
 
-func (c *Cache) Get(key string) (interface{}, bool) {
+func (c *Cache) Get(key string) (string, bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

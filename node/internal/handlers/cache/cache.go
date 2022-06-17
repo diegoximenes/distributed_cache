@@ -12,6 +12,10 @@ type GetResponse struct {
 	Value interface{} `json:"value"`
 }
 
+type APIError struct {
+	Error string `json:"error"`
+}
+
 func Get(cache *cacheObj.Cache) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		key := c.Param("key")
@@ -40,9 +44,8 @@ func Put(cache *cacheObj.Cache) func(c *gin.Context) {
 		var input cacheObj.PutInput
 		err := c.BindJSON(&input)
 		if err != nil {
-			c.Abort()
-		}
-		if !c.IsAborted() {
+			c.JSON(http.StatusBadRequest, APIError{Error: err.Error()})
+		} else {
 			cache.Put(&input)
 			c.AbortWithStatus(http.StatusOK)
 		}
