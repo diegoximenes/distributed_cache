@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
@@ -17,12 +15,12 @@ func main() {
 
 	err := logger.Init()
 	if err != nil {
-		panic(fmt.Sprintf("Error when setting logger: %v", err))
+		panic(err)
 	}
 
 	nodesMetadataClient, err := nodesmetadata.New()
 	if err != nil {
-		panic(fmt.Sprintf("Error when setting nodesMetadataClient: %v", err))
+		panic(err)
 	}
 
 	router := gin.Default()

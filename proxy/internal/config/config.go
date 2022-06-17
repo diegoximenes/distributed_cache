@@ -7,7 +7,7 @@ import (
 )
 
 type Spec struct {
-	NodeMetadataAddress string `mapstructure:"NODE_METADATA_ADDRESS"`
+	NodesMetadataAddress string `mapstructure:"NODES_METADATA_ADDRESS"`
 }
 
 var Config Spec
@@ -23,11 +23,11 @@ func panicEmpty(c string, configName string) {
 }
 
 func validate() {
-	panicEmpty(Config.NodeMetadataAddress, "NODE_METADATA_ADDRESS")
+	panicEmpty(Config.NodesMetadataAddress, "NODES_METADATA_ADDRESS")
 }
 
 func Read() {
-	viper.BindEnv("NODE_METADATA_ADDRESS")
+	viper.BindEnv("NODES_METADATA_ADDRESS")
 
 	if err := viper.Unmarshal(&Config); err != nil {
 		panic(err)
