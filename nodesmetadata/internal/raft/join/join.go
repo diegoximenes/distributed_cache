@@ -12,5 +12,13 @@ type JoinInput struct {
 }
 
 func Join(raftNode *raft.Raft, input *JoinInput) error {
-	return raftNode.AddVoter(raft.ServerID(input.ID), raft.ServerAddress(input.Address), 0, 2*time.Second).Error()
+	err := raftNode.
+		AddVoter(
+			raft.ServerID(input.ID),
+			raft.ServerAddress(input.Address),
+			0,
+			2*time.Second,
+		).
+		Error()
+	return err
 }

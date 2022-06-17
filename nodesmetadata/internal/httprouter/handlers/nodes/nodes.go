@@ -36,7 +36,10 @@ func Put(raftNode *raft.Raft) func(c *gin.Context) {
 		var input raftFSM.NodeMetadata
 		err := c.BindJSON(&input)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, handlers.APIError{Error: err.Error()})
+			apiError := handlers.APIError{
+				Error: err.Error(),
+			}
+			c.AbortWithStatusJSON(http.StatusBadRequest, apiError)
 			return
 		}
 

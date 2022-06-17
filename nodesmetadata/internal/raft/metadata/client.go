@@ -36,7 +36,10 @@ func NewClient(raftNode *raft.Raft, firstByte byte) *RaftNodeMetadataClient {
 	}
 }
 
-func (client *RaftNodeMetadataClient) getApplicationAddress(ctx context.Context, raftAddress string) (string, error) {
+func (client *RaftNodeMetadataClient) getApplicationAddress(
+	ctx context.Context,
+	raftAddress string,
+) (string, error) {
 	url := fmt.Sprintf("http://%v%v", raftAddress, HTTPPath)
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -59,7 +62,9 @@ func (client *RaftNodeMetadataClient) getApplicationAddress(ctx context.Context,
 	return applicationAddress, nil
 }
 
-func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress(ctx context.Context) (string, error) {
+func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress(
+	ctx context.Context,
+) (string, error) {
 	leaderRaftAddress, _ := client.raftNode.LeaderWithID()
 	if leaderRaftAddress == "" {
 		return "", errors.New("unknown leader")
@@ -67,7 +72,11 @@ func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress(ctx context.Co
 	return client.getApplicationAddress(ctx, string(leaderRaftAddress))
 }
 
-func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(ctx context.Context, raftAddress string, applicationAddressesChannel chan string) {
+func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(
+	ctx context.Context,
+	raftAddress string,
+	applicationAddressesChannel chan string,
+) {
 	applicationAddress, err := client.getApplicationAddress(ctx, raftAddress)
 	if err == nil {
 		applicationAddressesChannel <- applicationAddress
@@ -76,12 +85,18 @@ func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(ctx context
 	}
 }
 
-func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses(ctx context.Context) []string {
+func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses(
+	ctx context.Context,
+) []string {
 	nodes := client.raftNode.GetConfiguration().Configuration().Servers
 
 	applicationAddressesChannel := make(chan string, len(nodes))
 	for _, node := range nodes {
-		go client.addApplicationAddressToChannel(ctx, string(node.Address), applicationAddressesChannel)
+		go client.addApplicationAddressToChannel(
+			ctx,
+			string(node.Address),
+			applicationAddressesChannel,
+		)
 	}
 
 	var applicationAddresses []string

@@ -5,7 +5,12 @@ import (
 	"time"
 )
 
-func Dial(network string, address string, timeout time.Duration, firstByte byte) (net.Conn, error) {
+func Dial(
+	network string,
+	address string,
+	timeout time.Duration,
+	firstByte byte,
+) (net.Conn, error) {
 	netDialer := &net.Dialer{Timeout: timeout}
 	conn, err := netDialer.Dial(network, address)
 	if err != nil {

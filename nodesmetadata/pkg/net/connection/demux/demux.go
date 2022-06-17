@@ -79,7 +79,8 @@ func (demux *Demux) handleConn(conn net.Conn) {
 
 func (demux *Demux) RegisterOutListener(firstByte byte, outListener *listener.Listener) error {
 	if _, outListenerExists := demux.outListeners[firstByte]; outListenerExists {
-		return errors.New(fmt.Sprintf("firstByte %v already has an outListener registered", firstByte))
+		errorMsg := fmt.Sprintf("firstByte %v already has an outListener registered", firstByte)
+		return errors.New(errorMsg)
 	}
 
 	demux.outListeners[firstByte] = outListener

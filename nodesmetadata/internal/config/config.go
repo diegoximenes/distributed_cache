@@ -23,7 +23,7 @@ func Read() {
 	pflag.String("raft_id", "", "raft node id")
 	pflag.String("raft_address", "", "raft bind address")
 	pflag.String("raft_dir", "", "raft dir path")
-	pflag.Bool("bootstrap_raft_cluster", false, "boolean indicating if should boostrap raft cluster")
+	pflag.Bool("bootstrap_raft_cluster", false, "bool indicating if should boostrap raft cluster")
 	pflag.String("application_address", "", "application address")
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stdout, "Usage: %s [options]\n", os.Args[0])

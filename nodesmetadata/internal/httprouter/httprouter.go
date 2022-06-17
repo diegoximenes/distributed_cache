@@ -16,14 +16,19 @@ import (
 	"github.com/hashicorp/raft"
 )
 
-func checkRaftLeaderMiddleware(raftNode *raft.Raft, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) gin.HandlerFunc {
+func checkRaftLeaderMiddleware(
+	raftNode *raft.Raft,
+	raftNodeMetadataClient *metadata.RaftNodeMetadataClient,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := raftNode.VerifyLeader().Error()
 		if err != nil {
-			leaderApplicationAddress, err := raftNodeMetadataClient.GetLeaderApplicationAddress(c.Request.Context())
+			leaderApplicationAddress, err :=
+				raftNodeMetadataClient.GetLeaderApplicationAddress(c.Request.Context())
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
-					// maybe useful for metrics tracking purposes in the server, but is useful to not log as 5xx
+					// maybe useful for metrics tracking purposes in the server,
+					// but is useful to not log as 5xx
 					c.AbortWithStatus(499)
 				} else {
 					c.AbortWithStatus(http.StatusInternalServerError)
@@ -37,10 +42,15 @@ func checkRaftLeaderMiddleware(raftNode *raft.Raft, raftNodeMetadataClient *meta
 	}
 }
 
-func Set(raftNode *raft.Raft, fsm *fsm.FSM, raftNodeMetadataClient *raftMetadata.RaftNodeMetadataClient) {
+func Set(
+	raftNode *raft.Raft,
+	fsm *fsm.FSM,
+	raftNodeMetadataClient *raftMetadata.RaftNodeMetadataClient,
+) {
 	router := gin.Default()
 
-	raftLeaderGroup := router.Group("/", checkRaftLeaderMiddleware(raftNode, raftNodeMetadataClient))
+	raftLeaderGroup :=
+		router.Group("/", checkRaftLeaderMiddleware(raftNode, raftNodeMetadataClient))
 
 	raftLeaderGroup.GET("/nodes", nodes.Get(raftNode, fsm))
 	raftLeaderGroup.PUT("/nodes", nodes.Put(raftNode))

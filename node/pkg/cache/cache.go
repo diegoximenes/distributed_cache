@@ -22,8 +22,9 @@ type obj struct {
 }
 
 type Cache struct {
-	lru   *lru.Cache
-	mutex sync.Mutex // uses Mutex instead of RWMutex since Get can remove element due to expiration
+	lru *lru.Cache
+	// uses Mutex instead of RWMutex since Get can remove element due to expiration
+	mutex sync.Mutex
 }
 
 func New(size int) (*Cache, error) {
