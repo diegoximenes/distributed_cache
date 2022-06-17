@@ -36,7 +36,7 @@ type NodesResponse struct {
 func Nodes(raftNodeMetadataClient *raftMetadata.RaftNodeMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		response := NodesResponse{
-			NodesApplicationAddresses: raftNodeMetadataClient.GetNodesApplicationAddresses(),
+			NodesApplicationAddresses: raftNodeMetadataClient.GetNodesApplicationAddresses(c.Request.Context()),
 		}
 		c.JSON(http.StatusOK, response)
 	}

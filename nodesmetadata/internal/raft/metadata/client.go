@@ -11,6 +11,7 @@ import (
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/mux"
 	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 	"github.com/hashicorp/raft"
+	"golang.org/x/net/context"
 )
 
 type RaftNodeMetadataClient struct {
@@ -35,9 +36,9 @@ func NewClient(raftNode *raft.Raft, firstByte byte) *RaftNodeMetadataClient {
 	}
 }
 
-func (client *RaftNodeMetadataClient) getApplicationAddress(raftAddress string) (string, error) {
+func (client *RaftNodeMetadataClient) getApplicationAddress(ctx context.Context, raftAddress string) (string, error) {
 	url := fmt.Sprintf("http://%v%v", raftAddress, HTTPPath)
-	request, err := http.NewRequest("GET", url, nil)
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -58,16 +59,16 @@ func (client *RaftNodeMetadataClient) getApplicationAddress(raftAddress string) 
 	return applicationAddress, nil
 }
 
-func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress() (string, error) {
+func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress(ctx context.Context) (string, error) {
 	leaderRaftAddress, _ := client.raftNode.LeaderWithID()
 	if leaderRaftAddress == "" {
 		return "", errors.New("unknown leader")
 	}
-	return client.getApplicationAddress(string(leaderRaftAddress))
+	return client.getApplicationAddress(ctx, string(leaderRaftAddress))
 }
 
-func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(raftAddress string, applicationAddressesChannel chan string) {
-	applicationAddress, err := client.getApplicationAddress(raftAddress)
+func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(ctx context.Context, raftAddress string, applicationAddressesChannel chan string) {
+	applicationAddress, err := client.getApplicationAddress(ctx, raftAddress)
 	if err == nil {
 		applicationAddressesChannel <- applicationAddress
 	} else {
@@ -75,12 +76,12 @@ func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(raftAddress
 	}
 }
 
-func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses() []string {
+func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses(ctx context.Context) []string {
 	nodes := client.raftNode.GetConfiguration().Configuration().Servers
 
 	applicationAddressesChannel := make(chan string, len(nodes))
 	for _, node := range nodes {
-		go client.addApplicationAddressToChannel(string(node.Address), applicationAddressesChannel)
+		go client.addApplicationAddressToChannel(ctx, string(node.Address), applicationAddressesChannel)
 	}
 
 	var applicationAddresses []string

@@ -1,6 +1,8 @@
 package httprouter
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -18,9 +20,14 @@ func checkRaftLeaderMiddleware(raftNode *raft.Raft, raftNodeMetadataClient *meta
 	return func(c *gin.Context) {
 		err := raftNode.VerifyLeader().Error()
 		if err != nil {
-			leaderApplicationAddress, err := raftNodeMetadataClient.GetLeaderApplicationAddress()
+			leaderApplicationAddress, err := raftNodeMetadataClient.GetLeaderApplicationAddress(c.Request.Context())
 			if err != nil {
-				c.AbortWithStatus(http.StatusInternalServerError)
+				if errors.Is(err, context.Canceled) {
+					// maybe useful for metrics tracking purposes in the server, but is useful to not log as 5xx
+					c.AbortWithStatus(499)
+				} else {
+					c.AbortWithStatus(http.StatusInternalServerError)
+				}
 			} else {
 				url := fmt.Sprintf("%v%v", leaderApplicationAddress, c.Request.URL.Path)
 				c.Redirect(http.StatusTemporaryRedirect, url)
