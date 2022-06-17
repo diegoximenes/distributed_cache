@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter/handlers"
 	raftFSM "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
 )
 
 const (
-	raftTimeout = 10 * time.Second
+	raftTimeout = 2 * time.Second
 )
 
-func Get(raftNode *raft.Raft, fsm *raftFSM.FSM, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
+func Get(raftNode *raft.Raft, fsm *raftFSM.FSM) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		nodesMetadata := fsm.Get()
 		c.JSON(http.StatusOK, nodesMetadata)
@@ -31,25 +31,30 @@ func applyCommand(raftNode *raft.Raft, command *raftFSM.Command) error {
 	return raftNode.Apply(commandBytes, raftTimeout).Error()
 }
 
-func Put(raftNode *raft.Raft, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
+func Put(raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input raftFSM.NodeMetadata
-		c.BindJSON(&input)
+		err := c.BindJSON(&input)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, handlers.APIError{Error: err.Error()})
+			return
+		}
 
 		command := raftFSM.Command{
 			Operation:    "set",
 			NodeMetadata: input,
 		}
-		err := applyCommand(raftNode, &command)
+		err = applyCommand(raftNode, &command)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
-		} else {
-			c.AbortWithStatus(http.StatusOK)
+			return
 		}
+
+		c.AbortWithStatus(http.StatusOK)
 	}
 }
 
-func Delete(raftNode *raft.Raft, raftNodeMetadataClient *metadata.RaftNodeMetadataClient) func(c *gin.Context) {
+func Delete(raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 

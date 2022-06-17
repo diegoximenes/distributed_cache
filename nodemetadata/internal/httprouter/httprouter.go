@@ -35,9 +35,9 @@ func Set(raftNode *raft.Raft, fsm *fsm.FSM, raftNodeMetadataClient *raftMetadata
 
 	raftLeaderGroup := router.Group("/", checkRaftLeaderMiddleware(raftNode, raftNodeMetadataClient))
 
-	raftLeaderGroup.GET("/nodes", nodes.Get(raftNode, fsm, raftNodeMetadataClient))
-	raftLeaderGroup.PUT("/nodes", nodes.Put(raftNode, raftNodeMetadataClient))
-	raftLeaderGroup.DELETE("/nodes/:id", nodes.Delete(raftNode, raftNodeMetadataClient))
+	raftLeaderGroup.GET("/nodes", nodes.Get(raftNode, fsm))
+	raftLeaderGroup.PUT("/nodes", nodes.Put(raftNode))
+	raftLeaderGroup.DELETE("/nodes/:id", nodes.Delete(raftNode))
 
 	raftLeaderGroup.PUT("/raft/join", raftHandler.Join(raftNode))
 	raftLeaderGroup.GET("/raft/nodes", raftHandler.Nodes(raftNodeMetadataClient))

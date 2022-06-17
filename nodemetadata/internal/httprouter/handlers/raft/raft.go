@@ -3,6 +3,7 @@ package raft
 import (
 	"net/http"
 
+	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter/handlers"
 	raftJoin "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/join"
 	raftMetadata "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
 	"github.com/gin-gonic/gin"
@@ -12,14 +13,19 @@ import (
 func Join(raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input raftJoin.JoinInput
-		c.BindJSON(&input)
+		err := c.BindJSON(&input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, handlers.APIError{Error: err.Error()})
+			return
+		}
 
-		err := raftJoin.Join(raftNode, &input)
+		err = raftJoin.Join(raftNode, &input)
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
-		} else {
-			c.AbortWithStatus(http.StatusOK)
+			return
 		}
+
+		c.AbortWithStatus(http.StatusOK)
 	}
 }
 

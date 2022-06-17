@@ -15,10 +15,10 @@ type NodeMetadata struct {
 	Status  string `json:"status"`
 }
 
-type NodesMetadata map[string]NodeMetadata
+type NodesMetadata map[string]*NodeMetadata
 
 type Command struct {
-	Operation    string       `json:"operation,omitempty"`
+	Operation    string       `json:"operation"`
 	NodeMetadata NodeMetadata `json:"nodeMetadata,omitempty"`
 }
 
@@ -29,6 +29,7 @@ type FSM struct {
 
 func New() *FSM {
 	return &FSM{
+		rwMutex:       sync.RWMutex{},
 		nodesMetadata: make(NodesMetadata),
 	}
 }
@@ -36,7 +37,7 @@ func New() *FSM {
 func (fsm *FSM) applySet(nodeMetadata *NodeMetadata) interface{} {
 	fsm.rwMutex.Lock()
 	defer fsm.rwMutex.Unlock()
-	fsm.nodesMetadata[nodeMetadata.ID] = *nodeMetadata
+	fsm.nodesMetadata[nodeMetadata.ID] = nodeMetadata
 	return nil
 }
 
