@@ -34,7 +34,7 @@ func New() (*NodeMetadataClient, error) {
 		},
 	}
 
-	nodeMetadataServiceLeaderURL := fmt.Sprintf("%v/node", config.Config.NodeMetadataAddress)
+	nodeMetadataServiceLeaderURL := fmt.Sprintf("%v/nodes", config.Config.NodeMetadataAddress)
 
 	nodeMetadataClient := NodeMetadataClient{
 		NodesMetadata: make(NodesMetadata),
