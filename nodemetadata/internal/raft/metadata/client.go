@@ -25,12 +25,7 @@ func NewClient(raftNode *raft.Raft, firstByte byte) *RaftNodeMetadataClient {
 	}
 }
 
-func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress() (string, error) {
-	leaderRaftAddress, _ := client.raftNode.LeaderWithID()
-	if leaderRaftAddress == "" {
-		return "", errors.New("unknown leader")
-	}
-
+func (client *RaftNodeMetadataClient) getApplicationAddress(raftAddress string) (string, error) {
 	transport := &http.Transport{
 		Dial: func(network string, address string) (net.Conn, error) {
 			return mux.Dial(network, address, 1*time.Second, client.firstByte)
@@ -40,7 +35,7 @@ func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress() (string, err
 		Transport: transport,
 	})
 
-	url := fmt.Sprintf("http://%v%v", leaderRaftAddress, HTTPPath)
+	url := fmt.Sprintf("http://%v%v", raftAddress, HTTPPath)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
@@ -62,4 +57,41 @@ func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress() (string, err
 	}
 
 	return response.ApplicationAddress, nil
+}
+
+func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress() (string, error) {
+	leaderRaftAddress, _ := client.raftNode.LeaderWithID()
+	if leaderRaftAddress == "" {
+		return "", errors.New("unknown leader")
+	}
+	return client.getApplicationAddress(string(leaderRaftAddress))
+}
+
+func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(raftAddress string, applicationAddressesChannel chan string) {
+	applicationAddress, err := client.getApplicationAddress(raftAddress)
+	if err == nil {
+		applicationAddressesChannel <- applicationAddress
+	} else {
+		applicationAddressesChannel <- ""
+	}
+}
+
+func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses() []string {
+	nodes := client.raftNode.GetConfiguration().Configuration().Servers
+
+	applicationAddressesChannel := make(chan string, len(nodes))
+	defer close(applicationAddressesChannel)
+	for _, node := range nodes {
+		go client.addApplicationAddressToChannel(string(node.Address), applicationAddressesChannel)
+	}
+
+	var applicationAddresses []string
+	for i := 0; i < len(nodes); i++ {
+		applicationAddress := <-applicationAddressesChannel
+		if applicationAddress != "" {
+			applicationAddresses = append(applicationAddresses, applicationAddress)
+		}
+	}
+
+	return applicationAddresses
 }
