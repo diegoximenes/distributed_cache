@@ -14,33 +14,34 @@ import (
 )
 
 type RaftNodeMetadataClient struct {
-	raftNode  *raft.Raft
-	firstByte byte
+	httpClient *httpUtil.HTTPClient
+	raftNode   *raft.Raft
 }
 
 func NewClient(raftNode *raft.Raft, firstByte byte) *RaftNodeMetadataClient {
-	return &RaftNodeMetadataClient{
-		raftNode:  raftNode,
-		firstByte: firstByte,
-	}
-}
-
-func (client *RaftNodeMetadataClient) getApplicationAddress(raftAddress string) (string, error) {
 	transport := &http.Transport{
 		Dial: func(network string, address string) (net.Conn, error) {
-			return mux.Dial(network, address, 1*time.Second, client.firstByte)
+			return mux.Dial(network, address, 1*time.Second, firstByte)
 		},
 	}
 	httpClient := httpUtil.NewClient(&http.Client{
 		Transport: transport,
+		Timeout:   1 * time.Second,
 	})
 
+	return &RaftNodeMetadataClient{
+		httpClient: httpClient,
+		raftNode:   raftNode,
+	}
+}
+
+func (client *RaftNodeMetadataClient) getApplicationAddress(raftAddress string) (string, error) {
 	url := fmt.Sprintf("http://%v%v", raftAddress, HTTPPath)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
-	responseBytes, err := httpClient.DoRequest(request)
+	responseBytes, err := client.httpClient.DoRequest(request)
 	if err != nil {
 		return "", err
 	}
@@ -50,13 +51,11 @@ func (client *RaftNodeMetadataClient) getApplicationAddress(raftAddress string) 
 		return "", nil
 	}
 
-	// TODO: improve this
-	if response.ApplicationAddress[0] == ':' {
-		applicationAddress := "http://localhost" + response.ApplicationAddress
-		return applicationAddress, nil
+	applicationAddress := response.ApplicationAddress
+	if applicationAddress[0] == ':' {
+		applicationAddress = "http://localhost" + response.ApplicationAddress
 	}
-
-	return response.ApplicationAddress, nil
+	return applicationAddress, nil
 }
 
 func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress() (string, error) {
@@ -80,7 +79,6 @@ func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses() []string {
 	nodes := client.raftNode.GetConfiguration().Configuration().Servers
 
 	applicationAddressesChannel := make(chan string, len(nodes))
-	defer close(applicationAddressesChannel)
 	for _, node := range nodes {
 		go client.addApplicationAddressToChannel(string(node.Address), applicationAddressesChannel)
 	}
