@@ -3,12 +3,12 @@ package nodemetadata
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
-	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 	"go.uber.org/zap"
 )
 
@@ -22,12 +22,25 @@ type NodesMetadata map[string]NodeMetadata
 
 type NodeMetadataClient struct {
 	NodesMetadata NodesMetadata
+
+	httpClient                   http.Client
+	nodeMetadataServiceLeaderURL string
 }
 
 func New() (*NodeMetadataClient, error) {
-	nodesMetadata := make(NodesMetadata)
+	httpClient := http.Client{
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	nodeMetadataServiceLeaderURL := fmt.Sprintf("%v/node", config.Config.NodeMetadataAddress)
+
 	nodeMetadataClient := NodeMetadataClient{
-		NodesMetadata: nodesMetadata,
+		NodesMetadata: make(NodesMetadata),
+
+		httpClient:                   httpClient,
+		nodeMetadataServiceLeaderURL: nodeMetadataServiceLeaderURL,
 	}
 
 	err := nodeMetadataClient.sync()
@@ -41,23 +54,39 @@ func New() (*NodeMetadataClient, error) {
 }
 
 func (nodeMetadataClient *NodeMetadataClient) sync() error {
-	url := fmt.Sprintf("%s/node", config.Config.NodeMetadataAddress)
-	request, err := http.NewRequest("GET", url, nil)
+	request, err := http.NewRequest("GET", nodeMetadataClient.nodeMetadataServiceLeaderURL, nil)
 	if err != nil {
+		return err
+	}
+	response, err := nodeMetadataClient.httpClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if (response.StatusCode >= 300) && (response.StatusCode < 400) {
+		location, err := response.Location()
+		if err != nil {
+			return err
+		}
+
+		leaderURL := location.String()
+		nodeMetadataClient.nodeMetadataServiceLeaderURL = leaderURL
+		return nodeMetadataClient.sync()
+	} else if (response.StatusCode < 200) || (response.StatusCode >= 400) {
+		// TODO: get all raft nodes addresses
 		return err
 	}
 
-	httpClient := httpUtil.NewClient(&http.Client{})
-	responseBytes, err := httpClient.DoRequest(request)
+	responseBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}
-	var response NodesMetadata
-	err = json.Unmarshal(responseBytes, &response)
+	var nodesMetadata NodesMetadata
+	err = json.Unmarshal(responseBytes, &nodesMetadata)
 	if err != nil {
 		return err
 	}
-	nodeMetadataClient.NodesMetadata = response
+	nodeMetadataClient.NodesMetadata = nodesMetadata
 
 	logger.Logger.Info(
 		"NodeMetadataClient.sync",
