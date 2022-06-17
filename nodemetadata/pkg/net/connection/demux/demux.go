@@ -39,8 +39,7 @@ func (demux *Demux) serve() error {
 		}
 
 		if err != nil {
-			// TODO: close current listeners
-			return err
+			panic(err)
 		}
 
 		go demux.handleConn(conn)
