@@ -2,12 +2,10 @@ package raft
 
 import (
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb"
 
@@ -33,26 +31,6 @@ func getTransport(demux *demux.Demux, tcpAddr *net.TCPAddr) (*raft.NetworkTransp
 	streamLayer := streamlayer.New(raftProtocolListener, raftProtocolFirstByte)
 	transport := raft.NewNetworkTransport(streamLayer, 5, 2*time.Second, nil)
 	return transport, nil
-}
-
-func setRaftNodeMetadataServer(demux *demux.Demux, tcpAddr *net.TCPAddr) {
-	raftNodeMetadataListener := listener.New(tcpAddr)
-	demux.RegisterOutListener(raftNodeMetadataFirstByte, raftNodeMetadataListener)
-
-	router := gin.Default()
-	router.GET(metadata.HTTPPath, func(c *gin.Context) {
-		response := metadata.Response{
-			ApplicationAddress: config.Config.ApplicationAddress,
-		}
-		c.JSON(http.StatusOK, response)
-	})
-
-	go func() {
-		err := http.Serve(raftNodeMetadataListener, router)
-		if err != nil {
-			panic(err)
-		}
-	}()
 }
 
 func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
@@ -94,7 +72,7 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
 		return nil, nil, nil, err
 	}
 
-	setRaftNodeMetadataServer(demux, tcpAddr)
+	metadata.SetServer(demux, tcpAddr, raftNodeMetadataFirstByte)
 	raftNodeMetadataClient := metadata.NewClient(raftNode, raftNodeMetadataFirstByte)
 
 	if config.Config.BootstrapRaftCluster {
