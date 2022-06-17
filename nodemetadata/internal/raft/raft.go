@@ -31,7 +31,7 @@ func getTransport(demux *demux.Demux, tcpAddr *net.TCPAddr) (*raft.NetworkTransp
 		return nil, err
 	}
 	streamLayer := streamlayer.New(raftProtocolListener, raftProtocolFirstByte)
-	transport := raft.NewNetworkTransport(streamLayer, 5, 10*time.Second, nil)
+	transport := raft.NewNetworkTransport(streamLayer, 5, 2*time.Second, nil)
 	return transport, nil
 }
 
@@ -46,8 +46,13 @@ func setRaftNodeMetadataServer(demux *demux.Demux, tcpAddr *net.TCPAddr) {
 		}
 		c.JSON(http.StatusOK, response)
 	})
-	go http.Serve(raftNodeMetadataListener, router)
-	// TODO: error handling
+
+	go func() {
+		err := http.Serve(raftNodeMetadataListener, router)
+		if err != nil {
+			panic(err)
+		}
+	}()
 }
 
 func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
@@ -66,7 +71,7 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
 		return nil, nil, nil, err
 	}
 
-	snapshotsStore, err := raft.NewFileSnapshotStore(config.Config.RaftDir, 2, os.Stderr)
+	snapshotsStore, err := raft.NewFileSnapshotStore(config.Config.RaftDir, 2, os.Stdout)
 	if err != nil {
 		return nil, nil, nil, err
 	}
