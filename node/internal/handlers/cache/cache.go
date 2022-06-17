@@ -9,7 +9,7 @@ import (
 )
 
 type GetResponse struct {
-	Value string `json:"value"`
+	Value interface{} `json:"value"`
 }
 
 func Get(cache *cacheObj.Cache) func(c *gin.Context) {
@@ -38,8 +38,13 @@ func Delete(cache *cacheObj.Cache) func(c *gin.Context) {
 func Put(cache *cacheObj.Cache) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input cacheObj.PutInput
-		c.BindJSON(&input)
-		cache.Put(&input)
-		c.AbortWithStatus(http.StatusOK)
+		err := c.BindJSON(&input)
+		if err != nil {
+			c.Abort()
+		}
+		if !c.IsAborted() {
+			cache.Put(&input)
+			c.AbortWithStatus(http.StatusOK)
+		}
 	}
 }
