@@ -13,7 +13,7 @@ type Spec struct {
 	RaftId               string `mapstructure:"raft_id" validate:"required"`
 	RaftAddress          string `mapstructure:"raft_address" validate:"required"`
 	RaftDir              string `mapstructure:"raft_dir" validate:"required"`
-	BootstrapRaftCluster *bool  `mapstructure:"bootstrap_raft_cluster" validate:"required"`
+	BootstrapRaftCluster bool   `mapstructure:"bootstrap_raft_cluster" validate:"required"`
 	ApplicationAddress   string `mapstructure:"application_address" validate:"required"`
 }
 

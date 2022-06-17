@@ -92,7 +92,7 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
 	setRaftNodeMetadataServer(demux, tcpAddr)
 	raftNodeMetadataClient := metadata.NewClient(raftNode, raftNodeMetadataFirstByte)
 
-	if *config.Config.BootstrapRaftCluster {
+	if config.Config.BootstrapRaftCluster {
 		clusterConfig := raft.Configuration{
 			Servers: []raft.Server{
 				{
