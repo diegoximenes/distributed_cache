@@ -9,15 +9,15 @@ import (
 	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition/rendezvoushashing"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
-	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodemetadata"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodesmetadata"
 	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 )
 
-func Get(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Context) {
+func Get(nodesMetadataClient *nodesmetadata.NodesMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 
-		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodeMetadataClient.NodesMetadata, key)
+		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodesMetadataClient.NodesMetadata, key)
 		if nodeMetadata == nil {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
@@ -43,12 +43,12 @@ func Get(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Contex
 	}
 }
 
-func Put(nodeMetadataClient *nodemetadata.NodeMetadataClient) func(c *gin.Context) {
+func Put(nodesMetadataClient *nodesmetadata.NodesMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input node.PutInput
 		c.BindJSON(&input)
 
-		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodeMetadataClient.NodesMetadata, input.Key)
+		nodeMetadata := rendezvoushashing.GetNodeMetadata(&nodesMetadataClient.NodesMetadata, input.Key)
 		if nodeMetadata == nil {
 			logger.Logger.Error(
 				"Zero nodes available",

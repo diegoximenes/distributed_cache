@@ -1,4 +1,4 @@
-module github.com/diegoximenes/distributed_cache/nodemetadata
+module github.com/diegoximenes/distributed_cache/nodesmetadata
 
 go 1.18
 

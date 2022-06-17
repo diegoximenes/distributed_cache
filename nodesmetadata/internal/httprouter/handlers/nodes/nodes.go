@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter/handlers"
-	raftFSM "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers"
+	raftFSM "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
 )
 
 const (

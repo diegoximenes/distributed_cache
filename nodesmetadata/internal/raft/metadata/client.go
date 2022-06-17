@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/pkg/net/connection/mux"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/mux"
 	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 	"github.com/hashicorp/raft"
 )

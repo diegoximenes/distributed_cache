@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/config"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/streamlayer"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/pkg/net/connection/demux"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/pkg/net/connection/listener"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/config"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/streamlayer"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/demux"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/listener"
 )
 
 const (

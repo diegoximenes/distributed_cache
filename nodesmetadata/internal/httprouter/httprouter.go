@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/config"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter/handlers/nodes"
-	raftHandler "github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter/handlers/raft"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/fsm"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
-	raftMetadata "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/config"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers/nodes"
+	raftHandler "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers/raft"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
+	raftMetadata "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 )

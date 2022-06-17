@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/pkg/net/connection/listener"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/listener"
 )
 
 type Demux struct {

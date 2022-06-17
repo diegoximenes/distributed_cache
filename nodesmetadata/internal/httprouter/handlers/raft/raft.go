@@ -3,9 +3,9 @@ package raft
 import (
 	"net/http"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/httprouter/handlers"
-	raftJoin "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/join"
-	raftMetadata "github.com/diegoximenes/distributed_cache/nodemetadata/internal/raft/metadata"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers"
+	raftJoin "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/join"
+	raftMetadata "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
 )

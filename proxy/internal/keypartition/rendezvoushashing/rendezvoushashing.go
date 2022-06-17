@@ -5,13 +5,13 @@ import (
 
 	"github.com/spaolacci/murmur3"
 
-	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodemetadata"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodesmetadata"
 )
 
-func GetNodeMetadata(nodesMetadata *nodemetadata.NodesMetadata, key string) *nodemetadata.NodeMetadata {
+func GetNodeMetadata(nodesMetadata *nodesmetadata.NodesMetadata, key string) *nodesmetadata.NodeMetadata {
 	bestH1 := uint64(0)
 	bestH2 := uint64(0)
-	bestNodeMetadata := &nodemetadata.NodeMetadata{}
+	bestNodeMetadata := &nodesmetadata.NodeMetadata{}
 
 	if len(*nodesMetadata) == 0 {
 		return nil

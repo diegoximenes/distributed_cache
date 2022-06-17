@@ -4,9 +4,9 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/diegoximenes/distributed_cache/nodemetadata/internal/config"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/pkg/net/connection/demux"
-	"github.com/diegoximenes/distributed_cache/nodemetadata/pkg/net/connection/listener"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/config"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/demux"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/listener"
 	"github.com/gin-gonic/gin"
 )
 
