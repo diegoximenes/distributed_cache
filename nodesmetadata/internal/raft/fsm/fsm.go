@@ -12,7 +12,6 @@ import (
 type NodeMetadata struct {
 	ID      string `json:"id"`
 	Address string `json:"address"`
-	Status  string `json:"status"`
 }
 
 type NodesMetadata map[string]*NodeMetadata

@@ -17,7 +17,6 @@ import (
 type NodeMetadata struct {
 	ID      string `json:"id" binding:"required"`
 	Address string `json:"address" binding:"required"`
-	Status  string `json:"status" binding:"required"`
 }
 
 type NodesMetadata map[string]NodeMetadata

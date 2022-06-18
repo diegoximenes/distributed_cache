@@ -26,22 +26,18 @@ func TestRendezvousHashing(test *testing.T) {
 		nodesMetadata["node0"] = nodesmetadata.NodeMetadata{
 			ID:      "node0",
 			Address: "http://localhost:30000",
-			Status:  "active",
 		}
 		nodesMetadata["node1"] = nodesmetadata.NodeMetadata{
 			ID:      "node1",
 			Address: "http://localhost:30001",
-			Status:  "active",
 		}
 		nodesMetadata["node2"] = nodesmetadata.NodeMetadata{
 			ID:      "node2",
 			Address: "http://localhost:30002",
-			Status:  "active",
 		}
 		nodesMetadata["node3"] = nodesmetadata.NodeMetadata{
 			ID:      "node3",
 			Address: "http://localhost:30003",
-			Status:  "active",
 		}
 
 		Convey("uniform distribution", func() {
