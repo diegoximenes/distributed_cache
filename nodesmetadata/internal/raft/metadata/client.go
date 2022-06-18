@@ -14,12 +14,25 @@ import (
 	"golang.org/x/net/context"
 )
 
-type RaftNodeMetadataClient struct {
+type RaftNodeMetadata struct {
+	NodeID             string `json:"nodeID"`
+	ApplicationAddress string `json:"applicationAddress"`
+	RaftAddress        string `json:"raftAddress"`
+}
+
+type RaftNodesMetadata map[string]*RaftNodeMetadata
+
+type RaftMetadata struct {
+	NodesMetadata RaftNodesMetadata `json:"nodesMetadata"`
+	LeaderNodeID  string            `json:"leaderNodeID"`
+}
+
+type RaftMetadataClient struct {
 	httpClient *httpUtil.HTTPClient
 	raftNode   *raft.Raft
 }
 
-func NewClient(raftNode *raft.Raft, firstByte byte) *RaftNodeMetadataClient {
+func NewClient(raftNode *raft.Raft, firstByte byte) *RaftMetadataClient {
 	transport := &http.Transport{
 		Dial: func(network string, address string) (net.Conn, error) {
 			return mux.Dial(network, address, 1*time.Second, firstByte)
@@ -30,13 +43,13 @@ func NewClient(raftNode *raft.Raft, firstByte byte) *RaftNodeMetadataClient {
 		Timeout:   1 * time.Second,
 	})
 
-	return &RaftNodeMetadataClient{
+	return &RaftMetadataClient{
 		httpClient: httpClient,
 		raftNode:   raftNode,
 	}
 }
 
-func (client *RaftNodeMetadataClient) getApplicationAddress(
+func (client *RaftMetadataClient) getApplicationAddress(
 	ctx context.Context,
 	raftAddress string,
 ) (string, error) {
@@ -62,7 +75,7 @@ func (client *RaftNodeMetadataClient) getApplicationAddress(
 	return applicationAddress, nil
 }
 
-func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress(
+func (client *RaftMetadataClient) GetLeaderApplicationAddress(
 	ctx context.Context,
 ) (string, error) {
 	leaderRaftAddress, _ := client.raftNode.LeaderWithID()
@@ -72,40 +85,51 @@ func (client *RaftNodeMetadataClient) GetLeaderApplicationAddress(
 	return client.getApplicationAddress(ctx, string(leaderRaftAddress))
 }
 
-func (client *RaftNodeMetadataClient) addApplicationAddressToChannel(
+func (client *RaftMetadataClient) addRaftNodeMetadataToChannel(
 	ctx context.Context,
-	raftAddress string,
-	applicationAddressesChannel chan string,
+	raftServer *raft.Server,
+	raftNodeMetadataChannel chan *RaftNodeMetadata,
 ) {
-	applicationAddress, err := client.getApplicationAddress(ctx, raftAddress)
-	if err == nil {
-		applicationAddressesChannel <- applicationAddress
-	} else {
-		applicationAddressesChannel <- ""
+	raftNodeMetadata := RaftNodeMetadata{
+		NodeID:             string(raftServer.ID),
+		RaftAddress:        string(raftServer.Address),
+		ApplicationAddress: "",
 	}
+
+	applicationAddress, err := client.getApplicationAddress(ctx, string(raftServer.Address))
+	if err == nil {
+		raftNodeMetadata.ApplicationAddress = applicationAddress
+	}
+
+	raftNodeMetadataChannel <- &raftNodeMetadata
 }
 
-func (client *RaftNodeMetadataClient) GetNodesApplicationAddresses(
+func (client *RaftMetadataClient) GetRaftMetadata(
 	ctx context.Context,
-) []string {
+) *RaftMetadata {
 	nodes := client.raftNode.GetConfiguration().Configuration().Servers
 
-	applicationAddressesChannel := make(chan string, len(nodes))
-	for _, node := range nodes {
-		go client.addApplicationAddressToChannel(
+	raftNodeMetadataChannel := make(chan *RaftNodeMetadata, len(nodes))
+	for i := range nodes {
+		go client.addRaftNodeMetadataToChannel(
 			ctx,
-			string(node.Address),
-			applicationAddressesChannel,
+			&nodes[i],
+			raftNodeMetadataChannel,
 		)
 	}
 
-	var applicationAddresses []string
+	raftNodesMetadata := make(RaftNodesMetadata)
 	for i := 0; i < len(nodes); i++ {
-		applicationAddress := <-applicationAddressesChannel
-		if applicationAddress != "" {
-			applicationAddresses = append(applicationAddresses, applicationAddress)
-		}
+		raftNodeMetadata := <-raftNodeMetadataChannel
+		raftNodesMetadata[raftNodeMetadata.NodeID] = raftNodeMetadata
 	}
 
-	return applicationAddresses
+	_, leaderID := client.raftNode.LeaderWithID()
+
+	raftMetadata := RaftMetadata{
+		NodesMetadata: raftNodesMetadata,
+		LeaderNodeID:  string(leaderID),
+	}
+
+	return &raftMetadata
 }

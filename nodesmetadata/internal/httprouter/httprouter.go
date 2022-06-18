@@ -18,13 +18,13 @@ import (
 
 func checkRaftLeaderMiddleware(
 	raftNode *raft.Raft,
-	raftNodeMetadataClient *metadata.RaftNodeMetadataClient,
+	raftMetadataClient *metadata.RaftMetadataClient,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := raftNode.VerifyLeader().Error()
 		if err != nil {
 			leaderApplicationAddress, err :=
-				raftNodeMetadataClient.GetLeaderApplicationAddress(c.Request.Context())
+				raftMetadataClient.GetLeaderApplicationAddress(c.Request.Context())
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
 					// maybe useful for metrics tracking purposes in the server,
@@ -45,19 +45,19 @@ func checkRaftLeaderMiddleware(
 func Set(
 	raftNode *raft.Raft,
 	fsm *fsm.FSM,
-	raftNodeMetadataClient *raftMetadata.RaftNodeMetadataClient,
+	raftMetadataClient *raftMetadata.RaftMetadataClient,
 ) {
 	router := gin.Default()
 
 	raftLeaderGroup :=
-		router.Group("/", checkRaftLeaderMiddleware(raftNode, raftNodeMetadataClient))
+		router.Group("/", checkRaftLeaderMiddleware(raftNode, raftMetadataClient))
 
 	raftLeaderGroup.GET("/nodes", nodes.Get(raftNode, fsm))
 	raftLeaderGroup.PUT("/nodes", nodes.Put(raftNode))
 	raftLeaderGroup.DELETE("/nodes/:id", nodes.Delete(raftNode))
 
-	raftLeaderGroup.PUT("/raft/nodes", raftHandler.Put(raftNode))
-	raftLeaderGroup.GET("/raft/nodes", raftHandler.Get(raftNodeMetadataClient))
+	raftLeaderGroup.PUT("/raft/node", raftHandler.PutNode(raftNode))
+	raftLeaderGroup.GET("/raft/metadata", raftHandler.Metadata(raftMetadataClient))
 
 	router.Run(config.Config.ApplicationAddress)
 }

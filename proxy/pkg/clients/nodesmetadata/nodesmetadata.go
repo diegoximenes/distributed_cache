@@ -21,21 +21,30 @@ type NodeMetadata struct {
 
 type NodesMetadata map[string]NodeMetadata
 
-type RaftNodesMetadata struct {
-	NodesApplicationAddresses []string `json:"nodesApplicationAddresses"`
+type raftNodeMetadata struct {
+	NodeID             string `json:"nodeID"`
+	ApplicationAddress string `json:"applicationAddress"`
+	RaftAddress        string `json:"raftAddress"`
+}
+
+type raftNodesMetadata map[string]*raftNodeMetadata
+
+type raftMetadata struct {
+	NodesMetadata raftNodesMetadata `json:"nodesMetadata"`
+	LeaderNodeID  string            `json:"leaderNodeID"`
 }
 
 type NodesMetadataClient struct {
 	NodesMetadata NodesMetadata
 
-	httpClient                        http.Client
-	nodesMetadataServiceLeaderAddress string
-	nodesMetadataServiceAddresses     []string
+	httpClient               http.Client
+	leaderApplicationAddress string
+	raftMetadata             raftMetadata
 }
 
 const (
-	nodesMetadataPath     = "/nodes"
-	raftNodesMetadataPath = "/raft/nodes"
+	nodesMetadataPath = "/nodes"
+	raftMetadataPath  = "/raft/metadata"
 )
 
 func New() (*NodesMetadataClient, error) {
@@ -46,17 +55,17 @@ func New() (*NodesMetadataClient, error) {
 		Timeout: 2 * time.Second,
 	}
 
-	nodesMetadataServiceLeaderAddress := config.Config.NodesMetadataAddress
+	leaderApplicationAddress := config.Config.NodesMetadataAddress
 
 	nodesMetadataClient := NodesMetadataClient{
 		NodesMetadata: make(NodesMetadata),
 
-		httpClient:                        httpClient,
-		nodesMetadataServiceLeaderAddress: nodesMetadataServiceLeaderAddress,
-		nodesMetadataServiceAddresses:     make([]string, 0),
+		httpClient:               httpClient,
+		leaderApplicationAddress: leaderApplicationAddress,
+		raftMetadata:             raftMetadata{},
 	}
 
-	err := nodesMetadataClient.syncRaftNodesMetadata()
+	err := nodesMetadataClient.syncRaftMetadata()
 	if err != nil {
 		return nil, err
 	}
@@ -74,12 +83,15 @@ func New() (*NodesMetadataClient, error) {
 func (nodesMetadataClient *NodesMetadataClient) getAddressToUse(
 	addressesTries map[string]bool,
 ) (string, error) {
-	if _, exists := addressesTries[nodesMetadataClient.nodesMetadataServiceLeaderAddress]; !exists {
-		return nodesMetadataClient.nodesMetadataServiceLeaderAddress, nil
+	if _, exists := addressesTries[nodesMetadataClient.leaderApplicationAddress]; !exists {
+		return nodesMetadataClient.leaderApplicationAddress, nil
 	}
-	for _, address := range nodesMetadataClient.nodesMetadataServiceAddresses {
-		if _, exists := addressesTries[address]; !exists {
-			return address, nil
+	for _, raftNodeMetadata := range nodesMetadataClient.raftMetadata.NodesMetadata {
+		if raftNodeMetadata.ApplicationAddress == "" {
+			continue
+		}
+		if _, exists := addressesTries[raftNodeMetadata.ApplicationAddress]; !exists {
+			return raftNodeMetadata.ApplicationAddress, nil
 		}
 	}
 	return "", errors.New("no address available")
@@ -113,7 +125,7 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 		}
 
 		leaderAddress := strings.Split(location.String(), urlPath)[0]
-		nodesMetadataClient.nodesMetadataServiceLeaderAddress = leaderAddress
+		nodesMetadataClient.leaderApplicationAddress = leaderAddress
 	}
 	if (response.StatusCode < 200) || (response.StatusCode >= 300) {
 		addressesTried[address] = true
@@ -146,20 +158,26 @@ func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(
 	return nil
 }
 
-func (nodesMetadataClient *NodesMetadataClient) raftNodesMetadataStateUpdater(
+func (nodesMetadataClient *NodesMetadataClient) raftMetadataStateUpdater(
 	responseBytes []byte,
 ) error {
-	var raftNodesMetadata RaftNodesMetadata
-	err := json.Unmarshal(responseBytes, &raftNodesMetadata)
+	var raftMetadata raftMetadata
+	err := json.Unmarshal(responseBytes, &raftMetadata)
 	if err != nil {
 		return err
 	}
-	nodesMetadataClient.nodesMetadataServiceAddresses = raftNodesMetadata.NodesApplicationAddresses
+	nodesMetadataClient.raftMetadata = raftMetadata
+
+	if (raftMetadata.LeaderNodeID != "") &&
+		(raftMetadata.NodesMetadata[raftMetadata.LeaderNodeID].ApplicationAddress != "") {
+		nodesMetadataClient.leaderApplicationAddress =
+			raftMetadata.NodesMetadata[raftMetadata.LeaderNodeID].ApplicationAddress
+	}
 
 	logger.Logger.Info(
-		"NodesMetadataClient.raftNodesMetadataStateUpdater",
-		zap.String("nodesMetadataServiceAddresses",
-			fmt.Sprintf("%v", nodesMetadataClient.nodesMetadataServiceAddresses)),
+		"NodesMetadataClient.raftMetadataStateUpdater",
+		zap.String("raftMetadata",
+			fmt.Sprintf("%v", nodesMetadataClient.raftMetadata)),
 	)
 
 	return nil
@@ -173,17 +191,17 @@ func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadata() error {
 	)
 }
 
-func (nodesMetadataClient *NodesMetadataClient) syncRaftNodesMetadata() error {
+func (nodesMetadataClient *NodesMetadataClient) syncRaftMetadata() error {
 	return nodesMetadataClient.sync(
-		raftNodesMetadataPath,
-		nodesMetadataClient.raftNodesMetadataStateUpdater,
+		raftMetadataPath,
+		nodesMetadataClient.raftMetadataStateUpdater,
 		make(map[string]bool),
 	)
 }
 
 func (nodesMetadataClient *NodesMetadataClient) periodicallySync() {
 	for range time.Tick(time.Second * 15) {
-		nodesMetadataClient.syncRaftNodesMetadata()
+		nodesMetadataClient.syncRaftMetadata()
 		nodesMetadataClient.syncNodesMetadata()
 	}
 }

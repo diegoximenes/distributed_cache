@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/raft"
 )
 
-func Put(raftNode *raft.Raft) func(c *gin.Context) {
+func PutNode(raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input raftJoin.JoinInput
 		err := c.BindJSON(&input)
@@ -29,17 +29,10 @@ func Put(raftNode *raft.Raft) func(c *gin.Context) {
 	}
 }
 
-type GetResponse struct {
-	NodesApplicationAddresses []string `json:"nodesApplicationAddresses"`
-}
-
-func Get(raftNodeMetadataClient *raftMetadata.RaftNodeMetadataClient) func(c *gin.Context) {
+func Metadata(raftMetadataClient *raftMetadata.RaftMetadataClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		nodesApplicationAddresses :=
-			raftNodeMetadataClient.GetNodesApplicationAddresses(c.Request.Context())
-		response := GetResponse{
-			NodesApplicationAddresses: nodesApplicationAddresses,
-		}
-		c.JSON(http.StatusOK, response)
+		raftMetadata :=
+			raftMetadataClient.GetRaftMetadata(c.Request.Context())
+		c.JSON(http.StatusOK, raftMetadata)
 	}
 }

@@ -33,7 +33,7 @@ func getTransport(demux *demux.Demux, tcpAddr *net.TCPAddr) (*raft.NetworkTransp
 	return transport, nil
 }
 
-func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
+func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftMetadataClient, error) {
 	raftConfig := raft.DefaultConfig()
 	raftConfig.LocalID = raft.ServerID(config.Config.RaftId)
 
@@ -73,7 +73,7 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
 	}
 
 	metadata.SetServer(demux, tcpAddr, raftNodeMetadataFirstByte)
-	raftNodeMetadataClient := metadata.NewClient(raftNode, raftNodeMetadataFirstByte)
+	raftMetadataClient := metadata.NewClient(raftNode, raftNodeMetadataFirstByte)
 
 	if config.Config.BootstrapRaftCluster {
 		clusterConfig := raft.Configuration{
@@ -87,5 +87,5 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftNodeMetadataClient, error) {
 		raftNode.BootstrapCluster(clusterConfig)
 	}
 
-	return raftNode, fsm, raftNodeMetadataClient, nil
+	return raftNode, fsm, raftMetadataClient, nil
 }
