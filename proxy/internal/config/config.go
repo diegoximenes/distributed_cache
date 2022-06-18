@@ -2,36 +2,36 @@ package config
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 type Spec struct {
-	NodesMetadataAddress string `mapstructure:"NODES_METADATA_ADDRESS"`
+	NodesMetadataAddress string `mapstructure:"nodesmetadata_address" validate:"required"`
 }
 
 var Config Spec
 
-func panicEmpty(c string, configName string) {
-	if c == "" {
-		panic(
-			fmt.Errorf(
-				fmt.Sprintf("Error reading config, %s is not set.", configName),
-			),
-		)
-	}
-}
-
-func validate() {
-	panicEmpty(Config.NodesMetadataAddress, "NODES_METADATA_ADDRESS")
-}
-
 func Read() {
-	viper.BindEnv("NODES_METADATA_ADDRESS")
+	pflag.String("nodesmetadata_address", "", "nodesmetadata address")
+	pflag.Usage = func() {
+		fmt.Fprintf(os.Stdout, "Usage: %s [options]\n", os.Args[0])
+		pflag.PrintDefaults()
+	}
+	pflag.Parse()
+
+	viper.BindPFlags(pflag.CommandLine)
 
 	if err := viper.Unmarshal(&Config); err != nil {
 		panic(err)
 	}
 
-	validate()
+	validate := validator.New()
+	if err := validate.Struct(&Config); err != nil {
+		pflag.Usage()
+		panic(fmt.Sprintf("Invalid config:\n%v", err))
+	}
 }
