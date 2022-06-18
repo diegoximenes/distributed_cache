@@ -56,8 +56,8 @@ func Set(
 	raftLeaderGroup.PUT("/nodes", nodes.Put(raftNode))
 	raftLeaderGroup.DELETE("/nodes/:id", nodes.Delete(raftNode))
 
-	raftLeaderGroup.PUT("/raft/join", raftHandler.Join(raftNode))
-	raftLeaderGroup.GET("/raft/nodes", raftHandler.Nodes(raftNodeMetadataClient))
+	raftLeaderGroup.PUT("/raft/nodes", raftHandler.Put(raftNode))
+	raftLeaderGroup.GET("/raft/nodes", raftHandler.Get(raftNodeMetadataClient))
 
 	router.Run(config.Config.ApplicationAddress)
 }
