@@ -72,7 +72,9 @@ func New() (*NodesMetadataClient, error) {
 	return &nodesMetadataClient, nil
 }
 
-func (nodesMetadataClient *NodesMetadataClient) getAddressToUse(addressesTries map[string]bool) (string, error) {
+func (nodesMetadataClient *NodesMetadataClient) getAddressToUse(
+	addressesTries map[string]bool,
+) (string, error) {
 	if _, exists := addressesTries[nodesMetadataClient.nodesMetadataServiceLeaderAddress]; !exists {
 		return nodesMetadataClient.nodesMetadataServiceLeaderAddress, nil
 	}
@@ -127,7 +129,9 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	return stateUpdater(responseBytes)
 }
 
-func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(responseBytes []byte) error {
+func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(
+	responseBytes []byte,
+) error {
 	var nodesMetadata NodesMetadata
 	err := json.Unmarshal(responseBytes, &nodesMetadata)
 	if err != nil {
@@ -143,7 +147,9 @@ func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(respon
 	return nil
 }
 
-func (nodesMetadataClient *NodesMetadataClient) raftNodesMetadataStateUpdater(responseBytes []byte) error {
+func (nodesMetadataClient *NodesMetadataClient) raftNodesMetadataStateUpdater(
+	responseBytes []byte,
+) error {
 	var raftNodesMetadata RaftNodesMetadata
 	err := json.Unmarshal(responseBytes, &raftNodesMetadata)
 	if err != nil {
@@ -153,7 +159,8 @@ func (nodesMetadataClient *NodesMetadataClient) raftNodesMetadataStateUpdater(re
 
 	logger.Logger.Info(
 		"NodesMetadataClient.raftNodesMetadataStateUpdater",
-		zap.String("nodesMetadataServiceAddresses", fmt.Sprintf("%v", nodesMetadataClient.nodesMetadataServiceAddresses)),
+		zap.String("nodesMetadataServiceAddresses",
+			fmt.Sprintf("%v", nodesMetadataClient.nodesMetadataServiceAddresses)),
 	)
 
 	return nil
