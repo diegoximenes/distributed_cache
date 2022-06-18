@@ -8,7 +8,10 @@ import (
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodesmetadata"
 )
 
-func GetNodeMetadata(nodesMetadata *nodesmetadata.NodesMetadata, key string) *nodesmetadata.NodeMetadata {
+func GetNodeMetadata(
+	nodesMetadata *nodesmetadata.NodesMetadata,
+	key string,
+) *nodesmetadata.NodeMetadata {
 	bestH1 := uint64(0)
 	bestH2 := uint64(0)
 	bestNodeMetadata := &nodesmetadata.NodeMetadata{}

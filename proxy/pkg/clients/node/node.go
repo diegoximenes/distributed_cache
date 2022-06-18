@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 )
 
 type GetResponse struct {
-	Value interface{} `json:"value"`
+	Value string `json:"value"`
 }
 
 type PutInput struct {
@@ -19,15 +20,27 @@ type PutInput struct {
 	TTL   *int64 `json:"ttl"`
 }
 
-func Get(address string, key string) (*GetResponse, error) {
+type NodeClient struct {
+	httpClient *httpUtil.HTTPClient
+}
+
+func New() *NodeClient {
+	httpClient := httpUtil.NewClient(&http.Client{
+		Timeout: 2 * time.Second,
+	})
+	return &NodeClient{
+		httpClient: httpClient,
+	}
+}
+
+func (nodeClient *NodeClient) Get(address string, key string) (*GetResponse, error) {
 	url := fmt.Sprintf("%v/cache/%v", address, key)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	httpClient := httpUtil.NewClient(&http.Client{})
-	responseBytes, err := httpClient.DoRequest(request)
+	responseBytes, err := nodeClient.httpClient.DoRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +53,7 @@ func Get(address string, key string) (*GetResponse, error) {
 	return &response, nil
 }
 
-func Put(address string, input *PutInput) error {
+func (nodeClient *NodeClient) Put(address string, input *PutInput) error {
 	inputJson, err := json.Marshal(input)
 	if err != nil {
 		return err
@@ -52,8 +65,7 @@ func Put(address string, input *PutInput) error {
 		return err
 	}
 
-	httpClient := httpUtil.NewClient(&http.Client{})
-	_, err = httpClient.DoRequest(request)
+	_, err = nodeClient.httpClient.DoRequest(request)
 	if err != nil {
 		return err
 	}

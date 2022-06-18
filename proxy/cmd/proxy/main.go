@@ -7,6 +7,7 @@ import (
 	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/cache"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/heartbeat"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
+	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodesmetadata"
 )
 
@@ -23,9 +24,11 @@ func main() {
 		panic(err)
 	}
 
+	nodeClient := node.New()
+
 	router := gin.Default()
 	router.GET("/heartbeat", heartbeat.Heartbeat)
-	router.GET("/cache/:key", cache.Get(nodesMetadataClient))
-	router.PUT("/cache", cache.Put(nodesMetadataClient))
+	router.GET("/cache/:key", cache.Get(nodeClient, nodesMetadataClient))
+	router.PUT("/cache", cache.Put(nodeClient, nodesMetadataClient))
 	router.Run()
 }
