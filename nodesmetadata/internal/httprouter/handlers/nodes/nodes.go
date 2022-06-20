@@ -10,6 +10,7 @@ import (
 
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers"
 	raftFSM "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/sse"
 )
 
 const (
@@ -31,7 +32,7 @@ func applyCommand(raftNode *raft.Raft, command *raftFSM.Command) error {
 	return raftNode.Apply(commandBytes, raftTimeout).Error()
 }
 
-func Put(raftNode *raft.Raft) func(c *gin.Context) {
+func Put(outEvents sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input raftFSM.NodeMetadata
 		err := c.BindJSON(&input)
@@ -54,10 +55,11 @@ func Put(raftNode *raft.Raft) func(c *gin.Context) {
 		}
 
 		c.AbortWithStatus(http.StatusOK)
+		outEvents <- command
 	}
 }
 
-func Delete(raftNode *raft.Raft) func(c *gin.Context) {
+func Delete(outEvents sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -72,6 +74,7 @@ func Delete(raftNode *raft.Raft) func(c *gin.Context) {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		} else {
 			c.AbortWithStatus(http.StatusOK)
+			outEvents <- command
 		}
 	}
 }

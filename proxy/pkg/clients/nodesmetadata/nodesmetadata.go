@@ -1,11 +1,14 @@
 package nodesmetadata
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -38,13 +41,20 @@ type NodesMetadataClient struct {
 	NodesMetadata NodesMetadata
 
 	httpClient               http.Client
+	httpClientSSE            http.Client
 	leaderApplicationAddress string
 	raftMetadata             raftMetadata
 }
 
 const (
-	nodesMetadataPath = "/nodes"
-	raftMetadataPath  = "/raft/metadata"
+	nodesMetadataPath    = "/nodes"
+	nodesMetadataSSEPath = "/nodes/sse"
+	raftMetadataPath     = "/raft/metadata"
+	raftMetadataSSEPath  = "/raft/metadata/sse"
+)
+
+var (
+	sseDataRegexp, _ = regexp.Compile("^data:.*\n$")
 )
 
 func New() (*NodesMetadataClient, error) {
@@ -54,6 +64,11 @@ func New() (*NodesMetadataClient, error) {
 		},
 		Timeout: 2 * time.Second,
 	}
+	httpClientSSE := http.Client{
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 
 	leaderApplicationAddress := config.Config.NodesMetadataAddress
 
@@ -61,9 +76,13 @@ func New() (*NodesMetadataClient, error) {
 		NodesMetadata: make(NodesMetadata),
 
 		httpClient:               httpClient,
+		httpClientSSE:            httpClientSSE,
 		leaderApplicationAddress: leaderApplicationAddress,
 		raftMetadata:             raftMetadata{},
 	}
+
+	go nodesMetadataClient.syncRaftMetadataSSE()
+	go nodesMetadataClient.syncNodesMetadataSSE()
 
 	err := nodesMetadataClient.syncRaftMetadata()
 	if err != nil {
@@ -98,8 +117,9 @@ func (nodesMetadataClient *NodesMetadataClient) getAddressToUse(
 }
 
 func (nodesMetadataClient *NodesMetadataClient) sync(
+	httpClient *http.Client,
 	urlPath string,
-	stateUpdater func(responseBytes []byte) error,
+	stateUpdater func(io.ReadCloser) error,
 	addressesTried map[string]bool,
 ) error {
 	address, err := nodesMetadataClient.getAddressToUse(addressesTried)
@@ -112,7 +132,7 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	if err != nil {
 		return err
 	}
-	response, err := nodesMetadataClient.httpClient.Do(request)
+	response, err := httpClient.Do(request)
 	if err != nil {
 		return err
 	}
@@ -129,22 +149,22 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	}
 	if (response.StatusCode < 200) || (response.StatusCode >= 300) {
 		addressesTried[address] = true
-		return nodesMetadataClient.sync(urlPath, stateUpdater, addressesTried)
+		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 
-	responseBytes, err := ioutil.ReadAll(response.Body)
+	return stateUpdater(response.Body)
+}
+
+func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(
+	body io.ReadCloser,
+) error {
+	responseBytes, err := ioutil.ReadAll(body)
 	if err != nil {
 		return err
 	}
 
-	return stateUpdater(responseBytes)
-}
-
-func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(
-	responseBytes []byte,
-) error {
 	var nodesMetadata NodesMetadata
-	err := json.Unmarshal(responseBytes, &nodesMetadata)
+	err = json.Unmarshal(responseBytes, &nodesMetadata)
 	if err != nil {
 		return err
 	}
@@ -159,10 +179,15 @@ func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(
 }
 
 func (nodesMetadataClient *NodesMetadataClient) raftMetadataStateUpdater(
-	responseBytes []byte,
+	body io.ReadCloser,
 ) error {
+	responseBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return err
+	}
+
 	var raftMetadata raftMetadata
-	err := json.Unmarshal(responseBytes, &raftMetadata)
+	err = json.Unmarshal(responseBytes, &raftMetadata)
 	if err != nil {
 		return err
 	}
@@ -185,6 +210,7 @@ func (nodesMetadataClient *NodesMetadataClient) raftMetadataStateUpdater(
 
 func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadata() error {
 	return nodesMetadataClient.sync(
+		&nodesMetadataClient.httpClient,
 		nodesMetadataPath,
 		nodesMetadataClient.nodesMetadataStateUpdater,
 		make(map[string]bool),
@@ -193,14 +219,54 @@ func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadata() error {
 
 func (nodesMetadataClient *NodesMetadataClient) syncRaftMetadata() error {
 	return nodesMetadataClient.sync(
+		&nodesMetadataClient.httpClient,
 		raftMetadataPath,
 		nodesMetadataClient.raftMetadataStateUpdater,
 		make(map[string]bool),
 	)
 }
 
+func (nodesMetadataClient *NodesMetadataClient) sseStateUpdater(
+	sync func() error,
+) func(io.ReadCloser) error {
+	return func(body io.ReadCloser) error {
+		reader := bufio.NewReader(body)
+		for {
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				return err
+			}
+			if sseDataRegexp.MatchString(string(line)) {
+				sync()
+			}
+		}
+	}
+}
+
+func (nodesMetadataClient *NodesMetadataClient) syncRaftMetadataSSE() {
+	for {
+		nodesMetadataClient.sync(
+			&nodesMetadataClient.httpClientSSE,
+			raftMetadataSSEPath,
+			nodesMetadataClient.sseStateUpdater(nodesMetadataClient.syncRaftMetadata),
+			make(map[string]bool),
+		)
+	}
+}
+
+func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadataSSE() {
+	for {
+		nodesMetadataClient.sync(
+			&nodesMetadataClient.httpClientSSE,
+			nodesMetadataSSEPath,
+			nodesMetadataClient.sseStateUpdater(nodesMetadataClient.syncNodesMetadata),
+			make(map[string]bool),
+		)
+	}
+}
+
 func (nodesMetadataClient *NodesMetadataClient) periodicallySync() {
-	for range time.Tick(time.Second * 15) {
+	for range time.Tick(time.Minute * 1) {
 		nodesMetadataClient.syncRaftMetadata()
 		nodesMetadataClient.syncNodesMetadata()
 	}
