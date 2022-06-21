@@ -10,21 +10,25 @@ import (
 )
 
 type Spec struct {
-	RaftId               string `mapstructure:"raft_id" validate:"required"`
-	RaftAddress          string `mapstructure:"raft_address" validate:"required"`
-	RaftDir              string `mapstructure:"raft_dir" validate:"required"`
-	BootstrapRaftCluster bool   `mapstructure:"bootstrap_raft_cluster" validate:"required"`
-	ApplicationAddress   string `mapstructure:"application_address" validate:"required"`
+	RaftId                       string `mapstructure:"raft_id" validate:"required"`
+	RaftBindAddress              string `mapstructure:"raft_bind_address" validate:"required"`
+	RaftAdvertisedAddress        string `mapstructure:"raft_advertised_address" validate:"required"`
+	RaftDir                      string `mapstructure:"raft_dir" validate:"required"`
+	BootstrapRaftCluster         bool   `mapstructure:"bootstrap_raft_cluster" validate:"required"`
+	ApplicationBindAddress       string `mapstructure:"application_bind_address" validate:"required"`
+	ApplicationAdvertisedAddress string `mapstructure:"application_advertised_address" validate:"required"`
 }
 
 var Config Spec
 
 func Read() {
 	pflag.String("raft_id", "", "raft node id")
-	pflag.String("raft_address", "", "raft bind address")
+	pflag.String("raft_bind_address", "", "raft bind address")
+	pflag.String("raft_advertised_address", "", "raft advertised address")
 	pflag.String("raft_dir", "", "raft dir path")
 	pflag.Bool("bootstrap_raft_cluster", false, "bool indicating if should boostrap raft cluster")
-	pflag.String("application_address", "", "application address")
+	pflag.String("application_bind_address", "", "application bind address")
+	pflag.String("application_advertised_address", "", "application advertised address")
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stdout, "Usage: %s [options]\n", os.Args[0])
 		pflag.PrintDefaults()

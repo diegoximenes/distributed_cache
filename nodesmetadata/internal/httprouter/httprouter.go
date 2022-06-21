@@ -66,5 +66,5 @@ func Set(
 	raftLeaderGroup.GET("/raft/metadata", raftHandler.Metadata(raftMetadataClient))
 	raftLeaderGroup.GET("/raft/metadata/sse", raftMetadataSSE.Handler())
 
-	router.Run(config.Config.ApplicationAddress)
+	router.Run(config.Config.ApplicationBindAddress)
 }

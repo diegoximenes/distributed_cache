@@ -17,7 +17,7 @@ func SetServer(demux *demux.Demux, tcpAddr *net.TCPAddr, firstByte byte) {
 	router := gin.Default()
 	router.GET(HTTPPath, func(c *gin.Context) {
 		response := Response{
-			ApplicationAddress: config.Config.ApplicationAddress,
+			ApplicationAddress: config.Config.ApplicationAdvertisedAddress,
 		}
 		c.JSON(http.StatusOK, response)
 	})

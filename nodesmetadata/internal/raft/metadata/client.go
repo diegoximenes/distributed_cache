@@ -69,9 +69,6 @@ func (client *RaftMetadataClient) getApplicationAddress(
 	}
 
 	applicationAddress := response.ApplicationAddress
-	if applicationAddress[0] == ':' {
-		applicationAddress = "http://localhost" + response.ApplicationAddress
-	}
 	return applicationAddress, nil
 }
 

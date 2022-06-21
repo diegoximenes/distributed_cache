@@ -54,15 +54,15 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftMetadataClient, error) {
 		return nil, nil, nil, err
 	}
 
-	demux, err := demux.New(config.Config.RaftAddress)
+	demux, err := demux.New(config.Config.RaftBindAddress)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	tcpAddr, err := net.ResolveTCPAddr("tcp", config.Config.RaftAddress)
+	tcpRaftAdvertisedAddr, err := net.ResolveTCPAddr("tcp", config.Config.RaftAdvertisedAddress)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	transport, err := getTransport(demux, tcpAddr)
+	transport, err := getTransport(demux, tcpRaftAdvertisedAddr)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -72,7 +72,7 @@ func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftMetadataClient, error) {
 		return nil, nil, nil, err
 	}
 
-	metadata.SetServer(demux, tcpAddr, raftNodeMetadataFirstByte)
+	metadata.SetServer(demux, tcpRaftAdvertisedAddr, raftNodeMetadataFirstByte)
 	raftMetadataClient := metadata.NewClient(raftNode, raftNodeMetadataFirstByte)
 
 	if config.Config.BootstrapRaftCluster {
