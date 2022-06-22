@@ -11,12 +11,23 @@ import (
 
 type Spec struct {
 	NodesMetadataAddress string `mapstructure:"nodesmetadata_address" validate:"required"`
+	KeyPartitionStrategy string `mapstructure:"key_partition_strategy" validate:"oneof=rendezvous_hashing consistent_hashing"`
 }
+
+const (
+	RendezvousHashing string = "rendezvous_hashing"
+	ConsistentHashing string = "consistent_hashing"
+)
 
 var Config Spec
 
 func Read() {
 	pflag.String("nodesmetadata_address", "", "nodesmetadata address")
+	pflag.String(
+		"key_partition_strategy",
+		"",
+		fmt.Sprintf("options are %v or %v", RendezvousHashing, ConsistentHashing),
+	)
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stdout, "Usage: %s [options]\n", os.Args[0])
 		pflag.PrintDefaults()

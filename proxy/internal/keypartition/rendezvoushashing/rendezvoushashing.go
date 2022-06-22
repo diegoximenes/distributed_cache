@@ -1,9 +1,9 @@
 package rendezvoushashing
 
 import (
-	"errors"
 	"fmt"
 
+	keyPartitionErrors "github.com/diegoximenes/distributed_cache/proxy/internal/keypartition/errors"
 	"github.com/spaolacci/murmur3"
 )
 
@@ -22,7 +22,7 @@ func (rendezvousHashing *RendezvousHashing) GetNodeID(
 	objKey string,
 ) (string, error) {
 	if len(rendezvousHashing.nodesID) == 0 {
-		return "", errors.New("no nodes are available")
+		return "", keyPartitionErrors.NoAvailableNodesError
 	}
 
 	bestHash := uint64(0)

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition/consistenthashing"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition/rendezvoushashing"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -19,8 +20,7 @@ func randString(n int) string {
 	return string(b)
 }
 
-func testKeyPartitionStrategy(keyPartitionStrategy KeyPartitionStrategy, nodesID []string) {
-	keyPartitionStrategy.UpdateNodes(nodesID)
+func testUniformDistribution(keyPartitionStrategy KeyPartitionStrategy, nodesID []string) {
 
 	Convey("uniform distribution", func() {
 		numberOfKeys := 100000
@@ -29,6 +29,7 @@ func testKeyPartitionStrategy(keyPartitionStrategy KeyPartitionStrategy, nodesID
 			objKeyLen := rand.Intn(100) + 1
 			objKey := randString(objKeyLen)
 
+			selectedNodeID, _ := keyPartitionStrategy.GetNodeID(objKey)
 			selectedNodeID, err := keyPartitionStrategy.GetNodeID(objKey)
 			So(err, ShouldBeNil)
 
@@ -41,7 +42,9 @@ func testKeyPartitionStrategy(keyPartitionStrategy KeyPartitionStrategy, nodesID
 			So(fractionOfKeysInNode, ShouldBeBetween, 0.24, 0.26)
 		}
 	})
+}
 
+func testAfterNodeRemoval(keyPartitionStrategy KeyPartitionStrategy, nodesID []string) {
 	Convey("after a node removal only keys that were forwarded to this node are moved to other nodes", func() {
 		numberOfKeys := 100000
 		objsKey := make([]string, numberOfKeys)
@@ -57,7 +60,7 @@ func testKeyPartitionStrategy(keyPartitionStrategy KeyPartitionStrategy, nodesID
 			objKeyToNodeIDBeforeRemoval[objKey] = selectedNodeID
 		}
 
-		nodeIDToBeRemoved := "node2"
+		nodeIDToBeRemoved := nodesID[0]
 		nodesIDAfterRemoval := make([]string, len(nodesID)-1)
 		i := 0
 		for _, nodeID := range nodesID {
@@ -88,7 +91,17 @@ func TestKeyPartition(test *testing.T) {
 
 		Convey("RendezvousHashing", func() {
 			rendezvouzHashing := &rendezvoushashing.RendezvousHashing{}
-			testKeyPartitionStrategy(rendezvouzHashing, nodesID)
+			rendezvouzHashing.UpdateNodes(nodesID)
+
+			testUniformDistribution(rendezvouzHashing, nodesID)
+			testAfterNodeRemoval(rendezvouzHashing, nodesID)
+		})
+
+		Convey("ConsistentHashing", func() {
+			consistentHashing := &consistenthashing.ConsistentHashing{}
+			consistentHashing.UpdateNodes(nodesID)
+
+			testAfterNodeRemoval(consistentHashing, nodesID)
 		})
 	})
 }
