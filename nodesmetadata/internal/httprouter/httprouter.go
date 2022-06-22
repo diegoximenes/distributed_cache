@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/config"
@@ -17,6 +18,20 @@ import (
 	"github.com/hashicorp/raft"
 )
 
+func getIPv4AndPort(ctx context.Context, hostAndPort string) (string, string, error) {
+	host, port, err := net.SplitHostPort(hostAndPort)
+	if err != nil {
+		return "", "", err
+	}
+
+	ip, err := net.DefaultResolver.LookupIP(ctx, "ip4", host)
+	if err != nil {
+		return "", "", err
+	}
+
+	return ip[0].String(), port, nil
+}
+
 func checkRaftLeaderMiddleware(
 	raftNode *raft.Raft,
 	raftMetadataClient *metadata.RaftMetadataClient,
@@ -24,6 +39,8 @@ func checkRaftLeaderMiddleware(
 	return func(c *gin.Context) {
 		err := raftNode.VerifyLeader().Error()
 		if err != nil {
+			defer c.Abort()
+
 			leaderApplicationAddress, err :=
 				raftMetadataClient.GetLeaderApplicationAddress(c.Request.Context())
 			if err != nil {
@@ -31,14 +48,30 @@ func checkRaftLeaderMiddleware(
 					// maybe useful for metrics tracking purposes in the server,
 					// but is useful to not log as 5xx
 					c.AbortWithStatus(499)
-				} else {
-					c.AbortWithStatus(http.StatusInternalServerError)
+					return
 				}
-			} else {
-				url := fmt.Sprintf("http://%v%v", leaderApplicationAddress, c.Request.URL.Path)
-				c.Redirect(http.StatusTemporaryRedirect, url)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
 			}
-			c.Abort()
+
+			// use IP to handle the following case: nodesmetadata running as docker
+			// containers using the same bridge network, being able to communicate
+			// with each other through names. The host of these containers is
+			// not able to resolve those names.
+			leaderIP, leaderApplicationPort, err :=
+				getIPv4AndPort(c.Request.Context(), leaderApplicationAddress)
+			if err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+
+			url := fmt.Sprintf(
+				"http://%v:%v%v",
+				leaderIP,
+				leaderApplicationPort,
+				c.Request.URL.Path,
+			)
+			c.Redirect(http.StatusTemporaryRedirect, url)
 		}
 	}
 }
