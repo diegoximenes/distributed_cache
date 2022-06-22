@@ -1,121 +1,138 @@
+networks:
+  nodesmetadata:
+    driver: "bridge"
+  node:
+    driver: "bridge"
 services:
-  node-1:
+  node0:
+    container_name: node0
     tty: true
     build:
       context: ..
-      dockerfile: ../node/Dockerfile
-    network_mode: "host"
-    environment:
-      PORT: 30001
+      dockerfile: node/Dockerfile
+    networks:
+      - node
+    ports:
+      - "30000:8080"
     command: [
       "/app/node",
       "--cache_size", "10",
     ]
-  node-2:
+  node1:
+    container_name: node1
     tty: true
     build:
       context: ..
-      dockerfile: ../node/Dockerfile
-    network_mode: "host"
-    environment:
-      PORT: 30002
+      dockerfile: node/Dockerfile
+    networks:
+      - node
+    ports:
+      - "30001:8080"
     command: [
       "/app/node",
       "--cache_size", "10",
     ]
-  node-3:
+  node2:
+    container_name: node2
     tty: true
     build:
       context: ..
-      dockerfile: ../node/Dockerfile
-    network_mode: "host"
-    environment:
-      PORT: 30003
+      dockerfile: node/Dockerfile
+    networks:
+      - node
+    ports:
+      - "30002:8080"
     command: [
       "/app/node",
       "--cache_size", "10",
     ]
-  node-4:
+  nodesmetadata0: # first leader
+    container_name: nodesmetadata0
     tty: true
     build:
       context: ..
-      dockerfile: ../node/Dockerfile
-    network_mode: "host"
-    environment:
-      PORT: 30004
-    command: [
-      "/app/node",
-      "--cache_size", "10",
-    ]
-  nodesmetadata-1: # first leader
-    tty: true
-    build:
-      context: ..
-      dockerfile: ../nodesmetadata/Dockerfile
-    network_mode: "host"
+      dockerfile: nodesmetadata/Dockerfile
+    networks:
+      - nodesmetadata
+    ports:
+      - "31000:8080"
     command: [
       "/app/nodesmetadata",
-      "--raft_id", "raft1",
-      "--raft_bind_address", "localhost:31001",
-      "--raft_advertised_address", "localhost:31001",
-      "--application_bind_address", ":32001",
-      "--application_advertised_address", "http://localhost:32001",
+      "--raft_id", "raft0",
+      "--raft_bind_address", "0.0.0.0:8008",
+      "--raft_advertised_address", "nodesmetadata0:8008",
+      "--application_bind_address", ":8080",
+      "--application_advertised_address", "http://nodesmetadata0:8080",
       "--raft_dir", "/tmp",
       "--bootstrap_raft_cluster", "true",
     ]
-  nodesmetadata-2: # will start as follower
+  nodesmetadata1: # will start as follower
+    container_name: nodesmetadata1
     tty: true
     build:
       context: ..
-      dockerfile: ../nodesmetadata/Dockerfile
-    network_mode: "host"
+      dockerfile: nodesmetadata/Dockerfile
+    networks:
+      - nodesmetadata
+    ports:
+      - "31001:8080"
+    command: [
+      "/app/nodesmetadata",
+      "--raft_id", "raft1",
+      "--raft_bind_address", "0.0.0.0:8008",
+      "--raft_advertised_address", "nodesmetadata1:8008",
+      "--application_bind_address", ":8080",
+      "--application_advertised_address", "http://nodesmetadata1:8080",
+      "--raft_dir", "/tmp",
+      "--bootstrap_raft_cluster", "false",
+    ]
+  nodesmetadata2: # will start as follower
+    container_name: nodesmetadata2
+    tty: true
+    build:
+      context: ..
+      dockerfile: nodesmetadata/Dockerfile
+    networks:
+      - nodesmetadata
+    ports:
+      - "31002:8080"
     command: [
       "/app/nodesmetadata",
       "--raft_id", "raft2",
-      "--raft_bind_address", "localhost:31002",
-      "--raft_advertised_address", "localhost:31002",
-      "--application_bind_address", ":32002",
-      "--application_advertised_address", "http://localhost:32002",
+      "--raft_bind_address", "0.0.0.0:8008",
+      "--raft_advertised_address", "nodesmetadata2:8008",
+      "--application_bind_address", ":8080",
+      "--application_advertised_address", "http://nodesmetadata2:8080",
       "--raft_dir", "/tmp",
       "--bootstrap_raft_cluster", "false",
     ]
-  nodesmetadata-3: # will start as follower
+  proxy0:
+    container_name: proxy0
     tty: true
     build:
       context: ..
-      dockerfile: ../nodesmetadata/Dockerfile
-    network_mode: "host"
-    command: [
-      "/app/nodesmetadata",
-      "--raft_id", "raft3",
-      "--raft_bind_address", "localhost:31003",
-      "--raft_advertised_address", "localhost:31003",
-      "--application_bind_address", ":32003",
-      "--application_advertised_address", "http://localhost:32003",
-      "--raft_dir", "/tmp",
-      "--bootstrap_raft_cluster", "false",
-    ]
-  proxy-1:
-    tty: true
-    build:
-      context: ..
-      dockerfile: ../proxy/Dockerfile
-    network_mode: "host"
-    environment:
-      PORT: 33001
+      dockerfile: proxy/Dockerfile
+    networks:
+      - nodesmetadata
+      - node
+    ports:
+      - "32000:8080"
     # wait so nodesmetadata get ready
     command: sh -c "
       sleep 5 &&
-      /app/proxy --nodesmetadata_address http://localhost:32002"
-  proxy-2:
+      /app/proxy --nodesmetadata_address http://nodesmetadata1:8080"
+  proxy1:
+    container_name: proxy1
     tty: true
     build:
       context: ..
-      dockerfile: ../proxy/Dockerfile
-    network_mode: "host"
-    environment:
-      PORT: 33002
+      dockerfile: proxy/Dockerfile
+    networks:
+      - nodesmetadata
+      - node
+    ports:
+      - "32001:8080"
     # wait so nodesmetadata get ready
     command: sh -c "
       sleep 5 &&
-      /app/proxy --nodesmetadata_address http://localhost:32002"
+      /app/proxy --nodesmetadata_address http://nodesmetadata1:8080"
