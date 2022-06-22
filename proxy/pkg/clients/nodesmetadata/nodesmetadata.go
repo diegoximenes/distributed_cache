@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
 	"go.uber.org/zap"
 )
@@ -44,6 +46,9 @@ type NodesMetadataClient struct {
 	httpClientSSE            http.Client
 	leaderApplicationAddress string
 	raftMetadata             raftMetadata
+	keyPartitionStrategy     keypartition.KeyPartitionStrategy
+	// used to keep NodesMetadata and keyPartitionStrategy.nodesID in a consistent way
+	syncMetadataMutex sync.Mutex
 }
 
 const (
@@ -57,7 +62,9 @@ var (
 	sseDataRegexp, _ = regexp.Compile("^data:.*\n$")
 )
 
-func New() (*NodesMetadataClient, error) {
+func New(
+	keyPartitionStrategy keypartition.KeyPartitionStrategy,
+) (*NodesMetadataClient, error) {
 	httpClient := http.Client{
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -79,6 +86,7 @@ func New() (*NodesMetadataClient, error) {
 		httpClientSSE:            httpClientSSE,
 		leaderApplicationAddress: leaderApplicationAddress,
 		raftMetadata:             raftMetadata{},
+		keyPartitionStrategy:     keyPartitionStrategy,
 	}
 
 	go nodesMetadataClient.syncRaftMetadataSSE()
@@ -170,6 +178,14 @@ func (nodesMetadataClient *NodesMetadataClient) nodesMetadataStateUpdater(
 	}
 	nodesMetadataClient.NodesMetadata = nodesMetadata
 
+	nodesID := make([]string, len(nodesMetadata))
+	i := 0
+	for nodeID := range nodesMetadata {
+		nodesID[i] = nodeID
+		i++
+	}
+	nodesMetadataClient.keyPartitionStrategy.UpdateNodes(nodesID)
+
 	logger.Logger.Info(
 		"NodesMetadataClient.nodesMetadataStateUpdater",
 		zap.String("NodesMetadata", fmt.Sprintf("%v", nodesMetadataClient.NodesMetadata)),
@@ -209,6 +225,9 @@ func (nodesMetadataClient *NodesMetadataClient) raftMetadataStateUpdater(
 }
 
 func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadata() error {
+	nodesMetadataClient.syncMetadataMutex.Lock()
+	defer nodesMetadataClient.syncMetadataMutex.Unlock()
+
 	return nodesMetadataClient.sync(
 		&nodesMetadataClient.httpClient,
 		nodesMetadataPath,

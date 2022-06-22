@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers"
-	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition/rendezvoushashing"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodesmetadata"
@@ -17,18 +17,18 @@ import (
 func Get(
 	nodeClient *node.NodeClient,
 	nodesMetadataClient *nodesmetadata.NodesMetadataClient,
+	keyPartitionStrategy keypartition.KeyPartitionStrategy,
 ) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 
-		nodeMetadata := rendezvoushashing.GetNodeMetadata(
-			&nodesMetadataClient.NodesMetadata,
-			key,
-		)
-		if nodeMetadata == nil {
+		nodeID, err := keyPartitionStrategy.GetNodeID(key)
+		if err != nil {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
+
+		nodeMetadata := nodesMetadataClient.NodesMetadata[nodeID]
 
 		response, err := nodeClient.Get(nodeMetadata.Address, key)
 		if err != nil {
@@ -53,6 +53,7 @@ func Get(
 func Put(
 	nodeClient *node.NodeClient,
 	nodesMetadataClient *nodesmetadata.NodesMetadataClient,
+	keyPartitionStrategy keypartition.KeyPartitionStrategy,
 ) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input node.PutInput
@@ -62,20 +63,20 @@ func Put(
 				Error: err.Error(),
 			}
 			c.AbortWithStatusJSON(http.StatusBadRequest, apiError)
+			return
 		}
 
-		nodeMetadata := rendezvoushashing.GetNodeMetadata(
-			&nodesMetadataClient.NodesMetadata,
-			input.Key,
-		)
-		if nodeMetadata == nil {
+		nodeID, err := keyPartitionStrategy.GetNodeID(input.Key)
+		if err != nil {
 			logger.Logger.Error(
 				"Zero nodes available",
 				zap.String("method", "put"),
 			)
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
+
+		nodeMetadata := nodesMetadataClient.NodesMetadata[nodeID]
 
 		err = nodeClient.Put(nodeMetadata.Address, &input)
 		if err != nil {
