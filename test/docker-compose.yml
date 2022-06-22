@@ -12,8 +12,6 @@ services:
       dockerfile: node/Dockerfile
     networks:
       - node
-    ports:
-      - "30000:8080"
     command: [
       "/app/node",
       "--cache_size", "10",
@@ -26,8 +24,6 @@ services:
       dockerfile: node/Dockerfile
     networks:
       - node
-    ports:
-      - "30001:8080"
     command: [
       "/app/node",
       "--cache_size", "10",
@@ -40,8 +36,6 @@ services:
       dockerfile: node/Dockerfile
     networks:
       - node
-    ports:
-      - "30002:8080"
     command: [
       "/app/node",
       "--cache_size", "10",
@@ -55,7 +49,7 @@ services:
     networks:
       - nodesmetadata
     ports:
-      - "31000:8080"
+      - "30000:8080"
     command: [
       "/app/nodesmetadata",
       "--raft_id", "raft0",
@@ -75,7 +69,7 @@ services:
     networks:
       - nodesmetadata
     ports:
-      - "31001:8080"
+      - "30001:8080"
     command: [
       "/app/nodesmetadata",
       "--raft_id", "raft1",
@@ -95,7 +89,7 @@ services:
     networks:
       - nodesmetadata
     ports:
-      - "31002:8080"
+      - "30002:8080"
     command: [
       "/app/nodesmetadata",
       "--raft_id", "raft2",
@@ -116,7 +110,7 @@ services:
       - nodesmetadata
       - node
     ports:
-      - "32000:8080"
+      - "31000:8080"
     # wait so nodesmetadata get ready
     command: sh -c "
       sleep 5 &&
@@ -131,7 +125,7 @@ services:
       - nodesmetadata
       - node
     ports:
-      - "32001:8080"
+      - "31001:8080"
     # wait so nodesmetadata get ready
     command: sh -c "
       sleep 5 &&
