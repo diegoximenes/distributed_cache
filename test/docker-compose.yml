@@ -62,7 +62,7 @@ services:
       "--raft_bind_address", "0.0.0.0:8008",
       "--raft_advertised_address", "nodesmetadata0:8008",
       "--application_bind_address", ":8080",
-      "--application_advertised_address", "http://nodesmetadata0:8080",
+      "--application_advertised_address", "nodesmetadata0:8080",
       "--raft_dir", "/tmp",
       "--bootstrap_raft_cluster", "true",
     ]
@@ -82,7 +82,7 @@ services:
       "--raft_bind_address", "0.0.0.0:8008",
       "--raft_advertised_address", "nodesmetadata1:8008",
       "--application_bind_address", ":8080",
-      "--application_advertised_address", "http://nodesmetadata1:8080",
+      "--application_advertised_address", "nodesmetadata1:8080",
       "--raft_dir", "/tmp",
       "--bootstrap_raft_cluster", "false",
     ]
@@ -102,7 +102,7 @@ services:
       "--raft_bind_address", "0.0.0.0:8008",
       "--raft_advertised_address", "nodesmetadata2:8008",
       "--application_bind_address", ":8080",
-      "--application_advertised_address", "http://nodesmetadata2:8080",
+      "--application_advertised_address", "nodesmetadata2:8080",
       "--raft_dir", "/tmp",
       "--bootstrap_raft_cluster", "false",
     ]
@@ -120,7 +120,7 @@ services:
     # wait so nodesmetadata get ready
     command: sh -c "
       sleep 5 &&
-      /app/proxy --nodesmetadata_address http://nodesmetadata1:8080"
+      /app/proxy --nodesmetadata_address nodesmetadata1:8080"
   proxy1:
     container_name: proxy1
     tty: true
@@ -135,4 +135,4 @@ services:
     # wait so nodesmetadata get ready
     command: sh -c "
       sleep 5 &&
-      /app/proxy --nodesmetadata_address http://nodesmetadata1:8080"
+      /app/proxy --nodesmetadata_address nodesmetadata1:8080"

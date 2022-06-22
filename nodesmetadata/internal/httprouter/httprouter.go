@@ -35,7 +35,7 @@ func checkRaftLeaderMiddleware(
 					c.AbortWithStatus(http.StatusInternalServerError)
 				}
 			} else {
-				url := fmt.Sprintf("%v%v", leaderApplicationAddress, c.Request.URL.Path)
+				url := fmt.Sprintf("http://%v%v", leaderApplicationAddress, c.Request.URL.Path)
 				c.Redirect(http.StatusTemporaryRedirect, url)
 			}
 			c.Abort()

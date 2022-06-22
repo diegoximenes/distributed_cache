@@ -127,7 +127,7 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 		return err
 	}
 
-	url := fmt.Sprintf("%v%v", address, urlPath)
+	url := fmt.Sprintf("http://%v%v", address, urlPath)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
