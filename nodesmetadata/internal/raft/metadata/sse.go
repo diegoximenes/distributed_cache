@@ -44,7 +44,7 @@ func filterObservation(observation *raft.Observation) bool {
 	return true
 }
 
-func NewSSE(raftNode *raft.Raft) *sse.SSE {
+func NewSSE(raftNode *raft.Raft, nodesSSE *sse.SSE) *sse.SSE {
 	raftMetadataSSE := sse.New()
 
 	observationChan := make(chan raft.Observation)
@@ -56,6 +56,7 @@ func NewSSE(raftNode *raft.Raft) *sse.SSE {
 			leaderObservation, isLeaderObservation := observation.Data.(raft.LeaderObservation)
 			if isLeaderObservation && (leaderObservation.LeaderID != raft.ServerID(config.Config.RaftId)) {
 				raftMetadataSSE.CloseAllClientsChan <- true
+				nodesSSE.CloseAllClientsChan <- true
 			} else {
 				raftEvent := RaftEvent{
 					Type:  observationType(&observation),

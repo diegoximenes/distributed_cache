@@ -82,7 +82,7 @@ func Set(
 	raftMetadataClient *raftMetadata.RaftMetadataClient,
 ) {
 	nodesSSE := sse.New()
-	raftMetadataSSE := metadata.NewSSE(raftNode)
+	raftMetadataSSE := metadata.NewSSE(raftNode, nodesSSE)
 
 	router := gin.Default()
 

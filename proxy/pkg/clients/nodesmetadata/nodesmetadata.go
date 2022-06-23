@@ -92,16 +92,6 @@ func New(
 	go nodesMetadataClient.syncRaftMetadataSSE()
 	go nodesMetadataClient.syncNodesMetadataSSE()
 
-	err := nodesMetadataClient.syncRaftMetadata()
-	if err != nil {
-		return nil, err
-	}
-
-	err = nodesMetadataClient.syncNodesMetadata()
-	if err != nil {
-		return nil, err
-	}
-
 	go nodesMetadataClient.periodicallySync()
 
 	return &nodesMetadataClient, nil
@@ -153,6 +143,7 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 		}
 
 		leaderAddress := strings.Split(location.String(), urlPath)[0]
+		leaderAddress = strings.Split(leaderAddress, "http://")[1]
 		nodesMetadataClient.leaderApplicationAddress = leaderAddress
 	}
 	if (response.StatusCode < 200) || (response.StatusCode >= 300) {
@@ -250,6 +241,7 @@ func (nodesMetadataClient *NodesMetadataClient) sseStateUpdater(
 ) func(io.ReadCloser) error {
 	return func(body io.ReadCloser) error {
 		reader := bufio.NewReader(body)
+		sync()
 		for {
 			line, err := reader.ReadBytes('\n')
 			if err != nil {
