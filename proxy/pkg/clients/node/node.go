@@ -34,7 +34,7 @@ func New() *NodeClient {
 }
 
 func (nodeClient *NodeClient) Get(address string, key string) (*GetResponse, error) {
-	url := fmt.Sprintf("%v/cache/%v", address, key)
+	url := fmt.Sprintf("http://%v/cache/%v", address, key)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (nodeClient *NodeClient) Put(address string, input *PutInput) error {
 		return err
 	}
 
-	url := fmt.Sprintf("%v/cache", address)
+	url := fmt.Sprintf("http://%v/cache", address)
 	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(inputJson))
 	if err != nil {
 		return err
