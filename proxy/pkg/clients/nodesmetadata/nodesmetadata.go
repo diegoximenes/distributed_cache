@@ -64,7 +64,7 @@ var (
 
 func New(
 	keyPartitionStrategy keypartition.KeyPartitionStrategy,
-) (*NodesMetadataClient, error) {
+) *NodesMetadataClient {
 	httpClient := http.Client{
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -94,7 +94,7 @@ func New(
 
 	go nodesMetadataClient.periodicallySync()
 
-	return &nodesMetadataClient, nil
+	return &nodesMetadataClient
 }
 
 func (nodesMetadataClient *NodesMetadataClient) getAddressToUse(

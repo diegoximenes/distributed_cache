@@ -19,13 +19,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer logger.Logger.Sync()
 
 	keyPartitionStrategy := keypartition.New()
 
-	nodesMetadataClient, err := nodesmetadata.New(keyPartitionStrategy)
-	if err != nil {
-		panic(err)
-	}
+	nodesMetadataClient := nodesmetadata.New(keyPartitionStrategy)
 
 	nodeClient := node.New()
 
