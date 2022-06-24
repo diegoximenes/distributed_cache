@@ -121,6 +121,7 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	addressesTried map[string]bool,
 ) error {
 	address, err := nodesMetadataClient.getAddressToUse(addressesTried)
+	addressesTried[address] = true
 	if err != nil {
 		return err
 	}
@@ -128,12 +129,10 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	url := fmt.Sprintf("http://%v%v", address, urlPath)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		addressesTried[address] = true
 		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 	response, err := httpClient.Do(request)
 	if err != nil {
-		addressesTried[address] = true
 		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 	defer response.Body.Close()
@@ -149,9 +148,10 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 		leaderAddress := strings.Split(location.String(), urlPath)[0]
 		leaderAddress = strings.Split(leaderAddress, "http://")[1]
 		nodesMetadataClient.leaderApplicationAddress = leaderAddress
+
+		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 	if (response.StatusCode < 200) || (response.StatusCode >= 300) {
-		addressesTried[address] = true
 		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 
