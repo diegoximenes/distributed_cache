@@ -1,10 +1,13 @@
 package cache
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
+	"github.com/diegoximenes/distributed_cache/node/internal/logger"
 	cacheObj "github.com/diegoximenes/distributed_cache/node/pkg/cache"
 )
 
@@ -22,12 +25,12 @@ func Get(cache *cacheObj.Cache) func(c *gin.Context) {
 		value, exists := cache.Get(key)
 		if !exists {
 			c.AbortWithStatus(http.StatusNotFound)
-		} else {
-			response := GetResponse{
-				Value: value,
-			}
-			c.JSON(http.StatusOK, response)
+			return
 		}
+		response := GetResponse{
+			Value: value,
+		}
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -45,9 +48,16 @@ func Put(cache *cacheObj.Cache) func(c *gin.Context) {
 		err := c.BindJSON(&input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, APIError{Error: err.Error()})
-		} else {
-			cache.Put(&input)
-			c.AbortWithStatus(http.StatusOK)
+			return
 		}
+		cache.Put(&input)
+		c.AbortWithStatus(http.StatusOK)
+
+		logger.Logger.Info(
+			"",
+			zap.String("handler", "cache"),
+			zap.String("method", "Put"),
+			zap.String("input", fmt.Sprintf("%v", input)),
+		)
 	}
 }

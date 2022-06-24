@@ -7,6 +7,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
+// in seconds
 const maxTTL int64 = 600
 
 type PutInput struct {
@@ -23,7 +24,7 @@ type obj struct {
 
 type Cache struct {
 	lru *lru.Cache
-	// uses Mutex instead of RWMutex since Get can remove element due to expiration
+	// uses Mutex instead of RWMutex since Get can remove elements due to expiration
 	mutex sync.Mutex
 }
 
