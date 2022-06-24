@@ -128,11 +128,13 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	url := fmt.Sprintf("http://%v%v", address, urlPath)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		addressesTried[address] = true
+		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 	response, err := httpClient.Do(request)
 	if err != nil {
-		return err
+		addressesTried[address] = true
+		return nodesMetadataClient.sync(httpClient, urlPath, stateUpdater, addressesTried)
 	}
 	defer response.Body.Close()
 
