@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/httprouter/handlers"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/logger"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"

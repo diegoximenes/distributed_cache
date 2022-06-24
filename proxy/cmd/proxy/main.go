@@ -1,11 +1,8 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
-	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/cache"
-	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/heartbeat"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/httprouter"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/logger"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
@@ -27,9 +24,5 @@ func main() {
 
 	nodeClient := node.New()
 
-	router := gin.Default()
-	router.GET("/heartbeat", heartbeat.Heartbeat)
-	router.GET("/cache/:key", cache.Get(nodeClient, nodesMetadataClient, keyPartitionStrategy))
-	router.PUT("/cache", cache.Put(nodeClient, nodesMetadataClient, keyPartitionStrategy))
-	router.Run()
+	httprouter.Set(nodeClient, nodesMetadataClient, keyPartitionStrategy)
 }
