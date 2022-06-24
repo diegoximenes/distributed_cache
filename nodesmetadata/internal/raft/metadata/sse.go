@@ -54,7 +54,7 @@ func NewSSE(raftNode *raft.Raft, nodesSSE *sse.SSE) *sse.SSE {
 			observation := <-observationChan
 
 			leaderObservation, isLeaderObservation := observation.Data.(raft.LeaderObservation)
-			if isLeaderObservation && (leaderObservation.LeaderID != raft.ServerID(config.Config.RaftId)) {
+			if isLeaderObservation && (leaderObservation.LeaderID != raft.ServerID(config.Config.RaftID)) {
 				raftMetadataSSE.CloseAllClientsChan <- true
 				nodesSSE.CloseAllClientsChan <- true
 			} else {

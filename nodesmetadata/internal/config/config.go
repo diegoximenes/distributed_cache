@@ -10,7 +10,7 @@ import (
 )
 
 type Spec struct {
-	RaftId                       string `mapstructure:"raft_id" validate:"required"`
+	RaftID                       string `mapstructure:"raft_id" validate:"required"`
 	RaftBindAddress              string `mapstructure:"raft_bind_address" validate:"required"`
 	RaftAdvertisedAddress        string `mapstructure:"raft_advertised_address" validate:"required"`
 	RaftDir                      string `mapstructure:"raft_dir" validate:"required"`

@@ -35,7 +35,7 @@ func getTransport(demux *demux.Demux, tcpAddr *net.TCPAddr) (*raft.NetworkTransp
 
 func Set() (*raft.Raft, *fsm.FSM, *metadata.RaftMetadataClient, error) {
 	raftConfig := raft.DefaultConfig()
-	raftConfig.LocalID = raft.ServerID(config.Config.RaftId)
+	raftConfig.LocalID = raft.ServerID(config.Config.RaftID)
 
 	fsm := fsm.New()
 
