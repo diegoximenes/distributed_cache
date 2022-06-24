@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/logger"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/timeout"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/mux"
 	httpUtil "github.com/diegoximenes/distributed_cache/util/pkg/http"
 	"github.com/hashicorp/raft"
@@ -40,7 +42,7 @@ func NewClient(raftNode *raft.Raft, firstByte byte) *RaftMetadataClient {
 	}
 	httpClient := httpUtil.NewClient(&http.Client{
 		Transport: transport,
-		Timeout:   1 * time.Second,
+		Timeout:   timeout.RaftTimeout,
 	})
 
 	return &RaftMetadataClient{
@@ -96,6 +98,8 @@ func (client *RaftMetadataClient) addRaftNodeMetadataToChannel(
 	applicationAddress, err := client.getApplicationAddress(ctx, string(raftServer.Address))
 	if err == nil {
 		raftNodeMetadata.ApplicationAddress = applicationAddress
+	} else {
+		logger.Logger.Error(err.Error())
 	}
 
 	raftNodeMetadataChannel <- &raftNodeMetadata

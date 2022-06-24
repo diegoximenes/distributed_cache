@@ -21,7 +21,10 @@ func New(inListener *listener.Listener, dialFirstByte byte) *StreamLayer {
 	}
 }
 
-func (streamLayer *StreamLayer) Dial(address raft.ServerAddress, timeout time.Duration) (net.Conn, error) {
+func (streamLayer *StreamLayer) Dial(
+	address raft.ServerAddress,
+	timeout time.Duration,
+) (net.Conn, error) {
 	return mux.Dial("tcp", string(address), timeout, streamLayer.dialFirstByte)
 }
 

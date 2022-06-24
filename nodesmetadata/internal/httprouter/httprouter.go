@@ -10,12 +10,14 @@ import (
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/config"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers/nodes"
 	raftHandler "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers/raft"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/logger"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
 	raftMetadata "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/sse"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/raft"
+	"go.uber.org/zap"
 )
 
 func getIPv4AndPort(ctx context.Context, hostAndPort string) (string, string, error) {
@@ -50,6 +52,11 @@ func checkRaftLeaderMiddleware(
 					c.AbortWithStatus(499)
 					return
 				}
+
+				logger.Logger.Error(
+					err.Error(),
+					zap.String("middleware", "checkRaftLeaderMiddleware"),
+				)
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
@@ -61,6 +68,10 @@ func checkRaftLeaderMiddleware(
 			leaderIP, leaderApplicationPort, err :=
 				getIPv4AndPort(c.Request.Context(), leaderApplicationAddress)
 			if err != nil {
+				logger.Logger.Error(
+					err.Error(),
+					zap.String("middleware", "checkRaftLeaderMiddleware"),
+				)
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}

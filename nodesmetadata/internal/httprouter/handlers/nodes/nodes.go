@@ -2,15 +2,17 @@ package nodes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/hashicorp/raft"
-
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/httprouter/handlers"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/logger"
 	raftFSM "github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/sse"
+	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/raft"
+	"go.uber.org/zap"
 )
 
 const (
@@ -32,7 +34,7 @@ func applyCommand(raftNode *raft.Raft, command *raftFSM.Command) error {
 	return raftNode.Apply(commandBytes, raftTimeout).Error()
 }
 
-func Put(outEvents sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
+func Put(events sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var input raftFSM.NodeMetadata
 		err := c.BindJSON(&input)
@@ -50,16 +52,21 @@ func Put(outEvents sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
 		}
 		err = applyCommand(raftNode, &command)
 		if err != nil {
+			logger.Logger.Error(
+				err.Error(),
+				zap.String("handler", "nodes.Put"),
+				zap.String("input", fmt.Sprintf("%v", input)),
+			)
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
 		c.AbortWithStatus(http.StatusOK)
-		outEvents <- command
+		events <- command
 	}
 }
 
-func Delete(outEvents sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
+func Delete(events sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -71,10 +78,16 @@ func Delete(outEvents sse.ClientChan, raftNode *raft.Raft) func(c *gin.Context) 
 		}
 		err := applyCommand(raftNode, &command)
 		if err != nil {
+			logger.Logger.Error(
+				err.Error(),
+				zap.String("handler", "nodes.Delete"),
+				zap.String("ID", "id"),
+			)
 			c.AbortWithStatus(http.StatusInternalServerError)
-		} else {
-			c.AbortWithStatus(http.StatusOK)
-			outEvents <- command
+			return
 		}
+
+		c.AbortWithStatus(http.StatusOK)
+		events <- command
 	}
 }

@@ -1,8 +1,7 @@
 package membership
 
 import (
-	"time"
-
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/timeout"
 	"github.com/hashicorp/raft"
 )
 
@@ -17,7 +16,7 @@ func Add(raftNode *raft.Raft, input *AddInput) error {
 			raft.ServerID(input.ID),
 			raft.ServerAddress(input.Address),
 			0,
-			2*time.Second,
+			timeout.RaftTimeout,
 		).
 		Error()
 	return err
@@ -25,6 +24,6 @@ func Add(raftNode *raft.Raft, input *AddInput) error {
 
 func Remove(raftNode *raft.Raft, nodeID string) error {
 	return raftNode.
-		RemoveServer(raft.ServerID(nodeID), 0, 2*time.Second).
+		RemoveServer(raft.ServerID(nodeID), 0, timeout.RaftTimeout).
 		Error()
 }

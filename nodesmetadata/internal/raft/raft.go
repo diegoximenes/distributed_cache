@@ -4,7 +4,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb"
@@ -13,6 +12,7 @@ import (
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/fsm"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/metadata"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/streamlayer"
+	"github.com/diegoximenes/distributed_cache/nodesmetadata/internal/raft/timeout"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/demux"
 	"github.com/diegoximenes/distributed_cache/nodesmetadata/pkg/net/connection/listener"
 )
@@ -29,7 +29,7 @@ func getTransport(demux *demux.Demux, tcpAddr *net.TCPAddr) (*raft.NetworkTransp
 		return nil, err
 	}
 	streamLayer := streamlayer.New(raftProtocolListener, raftProtocolFirstByte)
-	transport := raft.NewNetworkTransport(streamLayer, 5, 2*time.Second, nil)
+	transport := raft.NewNetworkTransport(streamLayer, 5, timeout.RaftTimeout, nil)
 	return transport, nil
 }
 
