@@ -55,8 +55,7 @@ func Put(cache *cacheObj.Cache) func(c *gin.Context) {
 
 		logger.Logger.Info(
 			"",
-			zap.String("handler", "cache"),
-			zap.String("method", "Put"),
+			zap.String("handler", "cache.Put"),
 			zap.String("input", fmt.Sprintf("%v", input)),
 		)
 	}
