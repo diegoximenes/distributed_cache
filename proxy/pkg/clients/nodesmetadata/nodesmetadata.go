@@ -15,7 +15,7 @@ import (
 
 	"github.com/diegoximenes/distributed_cache/proxy/internal/config"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition"
-	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/logger"
 	"go.uber.org/zap"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/cache"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/handlers/heartbeat"
 	"github.com/diegoximenes/distributed_cache/proxy/internal/keypartition"
-	"github.com/diegoximenes/distributed_cache/proxy/internal/util/logger"
+	"github.com/diegoximenes/distributed_cache/proxy/internal/logger"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/node"
 	"github.com/diegoximenes/distributed_cache/proxy/pkg/clients/nodesmetadata"
 )
