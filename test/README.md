@@ -54,11 +54,11 @@ curl -X PUT -i -L $(dockerIP nodesmetadata2):8080/nodes -d '{"id": "node2", "add
 ```bash
 for i in $(seq 0 4); do
     echo "PUT $i"
-    curl -X PUT -i $(dockerIP proxy0):8080/cache -d '{"key": "key$i", "value": "value$i"}'
+    curl -X PUT -i $(dockerIP proxy0):8080/cache -d '{"key": "key'"$i"'", "value": "value'"$i"'"}'
 done 
 for i in $(seq 5 9); do
     echo "PUT $i"
-    curl -X PUT -i $(dockerIP proxy1):8080/cache -d '{"key": "key$i", "value": "value$i"}'
+    curl -X PUT -i $(dockerIP proxy1):8080/cache -d '{"key": "key'"$i"'", "value": "value'"$i"'"}'
 done 
 ```
 
@@ -106,6 +106,24 @@ docker-compose stop nodesmetadata0
 ```bash
 curl -X GET -i -L $(dockerIP nodesmetadata1):8080/nodes
 curl -X GET -i -L $(dockerIP nodesmetadata2):8080/nodes
+```
+
+- Check that the distributed cache is still operational.
+
+```bash
+curl -X PUT -i $(dockerIP proxy0):8080/cache -d '{"key": "key10", "value": "value10"}'
+curl -X PUT -i $(dockerIP proxy1):8080/cache -d '{"key": "key11", "value": "value11"}'
+curl -X PUT -i $(dockerIP proxy1):8080/cache -d '{"key": "key12", "value": "value12"}'
+
+curl -X GET -i $(dockerIP proxy0):8080/cache/key10 
+curl -X GET -i $(dockerIP proxy0):8080/cache/key11
+curl -X GET -i $(dockerIP proxy1):8080/cache/key12 
+```
+
+- Check that raft metadata still has nodesmetadata0 associated with it.
+
+```bash
+curl -X GET -i -L $(dockerIP nodesmetadata1):8080/raft/metadata
 ```
 
 - Stop another nodesmetadata node.
