@@ -16,6 +16,8 @@ redirect to reach the leader instance, nodesmetadata client updates its state to
 store the new nodesmetadata leader address.
 Therefore, nodesmetadata client always tries to communicate with the leader,
 but if eventually it communicates with a follower then the client will learn the new leader address returned by the follower.
+If nodesmetadata client is not able to communicate with the leader address that it has, 
+then it communicates with the followers that it is aware of, until finding the new leader.
 
 nodesmetadata client also keeps two SSE streams connections.
 One to track changes in nodesmetadata raft cluster, e.g., addition/removal of raft instances.

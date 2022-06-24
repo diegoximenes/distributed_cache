@@ -27,7 +27,7 @@ func (consistentHashing *ConsistentHashing) UpdateNodes(nodesID []string) {
 		for virtualNode := 0; virtualNode < numberOfVirtualNodesPerRealNode; virtualNode++ {
 			nodeKey := fmt.Sprintf("%v:%v", nodeID, virtualNode)
 			nodeKeyHash := consistentHashing.hash(nodeKey)
-			// don't handle collisions
+			// by now not handling collisions
 			nodesIDTree.Put(nodeKeyHash, nodeID)
 		}
 	}

@@ -47,8 +47,8 @@ type NodesMetadataClient struct {
 	leaderApplicationAddress string
 	raftMetadata             raftMetadata
 	keyPartitionStrategy     keypartition.KeyPartitionStrategy
-	// used to keep NodesMetadata and keyPartitionStrategy.nodesID in a consistent way
-	syncMetadataMutex sync.Mutex
+	// is used to keep NodesMetadata and keyPartitionStrategy.nodesID in a consistent way
+	syncNodesMetadataMutex sync.Mutex
 }
 
 const (
@@ -98,16 +98,16 @@ func New(
 }
 
 func (nodesMetadataClient *NodesMetadataClient) getAddressToUse(
-	addressesTries map[string]bool,
+	addressesTried map[string]bool,
 ) (string, error) {
-	if _, exists := addressesTries[nodesMetadataClient.leaderApplicationAddress]; !exists {
+	if _, exists := addressesTried[nodesMetadataClient.leaderApplicationAddress]; !exists {
 		return nodesMetadataClient.leaderApplicationAddress, nil
 	}
 	for _, raftNodeMetadata := range nodesMetadataClient.raftMetadata.NodesMetadata {
 		if raftNodeMetadata.ApplicationAddress == "" {
 			continue
 		}
-		if _, exists := addressesTries[raftNodeMetadata.ApplicationAddress]; !exists {
+		if _, exists := addressesTried[raftNodeMetadata.ApplicationAddress]; !exists {
 			return raftNodeMetadata.ApplicationAddress, nil
 		}
 	}
@@ -137,6 +137,8 @@ func (nodesMetadataClient *NodesMetadataClient) sync(
 	defer response.Body.Close()
 
 	if (response.StatusCode >= 300) && (response.StatusCode < 400) {
+		// handle redirect to leader
+
 		location, err := response.Location()
 		if err != nil {
 			return err
@@ -208,16 +210,15 @@ func (nodesMetadataClient *NodesMetadataClient) raftMetadataStateUpdater(
 
 	logger.Logger.Info(
 		"NodesMetadataClient.raftMetadataStateUpdater",
-		zap.String("raftMetadata",
-			fmt.Sprintf("%v", nodesMetadataClient.raftMetadata)),
+		zap.String("raftMetadata", fmt.Sprintf("%v", nodesMetadataClient.raftMetadata)),
 	)
 
 	return nil
 }
 
 func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadata() error {
-	nodesMetadataClient.syncMetadataMutex.Lock()
-	defer nodesMetadataClient.syncMetadataMutex.Unlock()
+	nodesMetadataClient.syncNodesMetadataMutex.Lock()
+	defer nodesMetadataClient.syncNodesMetadataMutex.Unlock()
 
 	return nodesMetadataClient.sync(
 		&nodesMetadataClient.httpClient,
@@ -256,29 +257,35 @@ func (nodesMetadataClient *NodesMetadataClient) sseStateUpdater(
 
 func (nodesMetadataClient *NodesMetadataClient) syncRaftMetadataSSE() {
 	for {
-		nodesMetadataClient.sync(
+		err := nodesMetadataClient.sync(
 			&nodesMetadataClient.httpClientSSE,
 			raftMetadataSSEPath,
 			nodesMetadataClient.sseStateUpdater(nodesMetadataClient.syncRaftMetadata),
 			make(map[string]bool),
 		)
+		logger.Logger.Warn(err.Error())
 	}
 }
 
 func (nodesMetadataClient *NodesMetadataClient) syncNodesMetadataSSE() {
 	for {
-		nodesMetadataClient.sync(
+		err := nodesMetadataClient.sync(
 			&nodesMetadataClient.httpClientSSE,
 			nodesMetadataSSEPath,
 			nodesMetadataClient.sseStateUpdater(nodesMetadataClient.syncNodesMetadata),
 			make(map[string]bool),
 		)
+		logger.Logger.Warn(err.Error())
 	}
 }
 
 func (nodesMetadataClient *NodesMetadataClient) periodicallySync() {
 	for range time.Tick(time.Minute * 1) {
-		nodesMetadataClient.syncRaftMetadata()
-		nodesMetadataClient.syncNodesMetadata()
+		if err := nodesMetadataClient.syncRaftMetadata(); err != nil {
+			logger.Logger.Warn(err.Error())
+		}
+		if err := nodesMetadataClient.syncNodesMetadata(); err != nil {
+			logger.Logger.Warn(err.Error())
+		}
 	}
 }

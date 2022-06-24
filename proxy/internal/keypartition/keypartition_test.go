@@ -21,7 +21,6 @@ func randString(n int) string {
 }
 
 func testUniformDistribution(keyPartitionStrategy KeyPartitionStrategy, nodesID []string) {
-
 	Convey("uniform distribution", func() {
 		numberOfKeys := 100000
 		countSelectedNodeID := make(map[string]int)
@@ -29,7 +28,6 @@ func testUniformDistribution(keyPartitionStrategy KeyPartitionStrategy, nodesID 
 			objKeyLen := rand.Intn(100) + 1
 			objKey := randString(objKeyLen)
 
-			selectedNodeID, _ := keyPartitionStrategy.GetNodeID(objKey)
 			selectedNodeID, err := keyPartitionStrategy.GetNodeID(objKey)
 			So(err, ShouldBeNil)
 
