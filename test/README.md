@@ -138,7 +138,7 @@ docker-compose stop nodesmetadata1
 curl -X GET -i -L $(dockerIP nodesmetadata2):8080/nodes
 ```
 
-- Restart a nodesmetadata node and check a leader wining an election.
+- Restart nodesmetadata1 and check a leader wining an election.
 
 ```bash
 docker-compose start nodesmetadata1
@@ -148,4 +148,10 @@ docker-compose start nodesmetadata1
 
 ```bash
 curl -X GET -i -L $(dockerIP nodesmetadata2):8080/nodes
+```
+
+- Restart nodesmetadata0 and check that failed contact messages stops to appear:
+
+```bash
+docker-compose start nodesmetadata0
 ```
