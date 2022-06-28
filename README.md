@@ -1,6 +1,6 @@
 # distributed_cache
 
-A distributed key-value cache.
+An eventually consistent distributed key-value cache.
 
 This was developed so I could get a bit of implementation experience on some techniques, such as:
 
